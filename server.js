@@ -78,8 +78,10 @@ app.get('/api/lotto', (req, res) => {
     ]);
 });
 
-cron.schedule('30 21,22 * * 6', () => {
+cron.schedule('45 20,21 * * 6', () => {
     checkAndUpdateLatestLotto();
+}, {
+    timezone: "Asia/Seoul"
 });
 
 app.listen(PORT, async () => {
