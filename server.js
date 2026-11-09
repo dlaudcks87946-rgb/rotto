@@ -78,7 +78,7 @@ app.get('/api/lotto', (req, res) => {
     ]);
 });
 
-cron.schedule('0 21,30,22 * * 6', () => {
+cron.schedule('30 21,22 * * 6', () => {
     checkAndUpdateLatestLotto();
 });
 
