@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로또 6/45 프로페셔널 통계 & OMR 공간 분석 조합기</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f1f3f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 740px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 1.35rem;
+            color: #212529;
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+        .section-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 15px;
+            font-size: 0.88rem;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .filter-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+        .filter-badge.omr {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .range-select-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .range-select-row select {
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            font-weight: bold;
+        }
+        .input-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .input-row input {
+            width: 42px;
+            padding: 6px 0;
+            text-align: center;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .input-row button {
+            flex: 1;
+            padding: 6px 12px;
+            background: #495057;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .input-row button:hover { background: #343a40; }
+        .mode-select {
+            display: flex;
+            gap: 12px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .mode-select label {
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .custom-input-box {
+            display: none;
+            margin-top: 10px;
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+        }
+        .custom-input-box textarea, .exclude-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.88rem;
+            font-family: inherit;
+        }
+        .custom-input-box textarea { height: 50px; resize: vertical; }
+        .pool-status {
+            font-size: 0.8rem;
+            color: #495057;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+        .advanced-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #dee2e6;
+            font-size: 0.82rem;
+            color: #495057;
+        }
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #495057;
+            margin-top: 10px;
+        }
+        .btn-generate {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #ffffff;
+            background: #d32f2f;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .btn-generate:hover { background: #b71c1c; }
+        .result-area {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .combo-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .combo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #666;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .combo-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .combo-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .balls {
+            display: flex;
+            gap: 5px;
+        }
+        .ball {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.88rem;
+            color: #ffffff;
+        }
+        .ball-1 { background-color: #fbc400; }
+        .ball-2 { background-color: #69c8f2; }
+        .ball-3 { background-color: #ff7272; }
+        .ball-4 { background-color: #aaa; }
+        .ball-5 { background-color: #b0d840; }
+        .stats-text {
+            font-size: 0.78rem;
+            color: #777;
+        }
+        
+        .backtest-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .backtest-badge {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .badge-1st-danger {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .badge-1st-clean {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .badge-history-detail {
+            font-size: 0.75rem;
+            color: #555;
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .storage-status {
+            font-size: 0.78rem;
+            color: #2e7d32;
+            font-weight: normal;
+        }
+        .btn-reset {
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .omr-preview-box {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 5px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .omr-title {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .omr-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 13px);
+            gap: 2px;
+        }
+        .omr-cell {
+            width: 13px;
+            height: 9px;
+            font-size: 6.5px;
+            border-radius: 1px;
+            background: #eef0f2;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .omr-cell.marked {
+            background: #d32f2f;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 2px rgba(211, 47, 47, 0.8);
+        }
+        .omr-cell.empty {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>로또 6/45 프로페셔널 통계 & OMR 공간 분석 조합기</h1>
+
+    <div class="section-box">
+        <div class="section-title">
+            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(영구 저장됨)</span></span>
+            <span style="color:#d32f2f;" id="lastBonusTag">직전 보너스: -</span>
+        </div>
+
+        <div class="range-select-row">
+            <label for="windowSelect">분석 대상 범위:</label>
+            <select id="windowSelect" onchange="recalculateStats()">
+                <option value="20" selected>최근 20회차</option>
+                <option value="50">최근 50회차</option>
+                <option value="100">최근 100회차</option>
+                <option value="all">불러온 전체 회차 (1회~최신)</option>
+            </select>
+            <span id="currentRangeText" style="font-size:0.8rem; color:#666; font-weight:normal;"></span>
+        </div>
+
+        <div class="filter-badge-list">
+            <span class="filter-badge">총합 110 ~ 160</span>
+            <span class="filter-badge">홀짝 2:4/3:3/4:2</span>
+            <span class="filter-badge">저고 3:3/4:2</span>
+            <span class="filter-badge">동끝수 필수</span>
+            <span class="filter-badge">40번대 마감</span>
+            <span class="filter-badge">이월수 0~2개</span>
+            <span class="filter-badge omr">OMR 공간 균형</span>
+            <span class="filter-badge" style="background:#fff3e0; color:#e65100;">1등 기출 이력 실시간 표시</span>
+        </div>
+
+        <div>
+            <span style="font-size:0.8rem; color:#666;">다음 회차 당첨번호 직접 추가:</span>
+            <div class="input-row">
+                <input type="number" id="inR" placeholder="회차" style="width:52px;">
+                <input type="number" id="in1" placeholder="1">
+                <input type="number" id="in2" placeholder="2">
+                <input type="number" id="in3" placeholder="3">
+                <input type="number" id="in4" placeholder="4">
+                <input type="number" id="in5" placeholder="5">
+                <input type="number" id="in6" placeholder="6">
+                <input type="number" id="inB" placeholder="보너스" style="border-color:#ff7272;">
+                <button onclick="addNewRoundManual()">추가</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span><b>전체 회차 엑셀 업로드:</b> </span>
+                <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="uploadExcel(this)">
+            </div>
+            <button class="btn-reset" onclick="resetStoredData()">저장 데이터 초기화</button>
+        </div>
+
+        <div class="stats-summary" id="statsSummary">
+            <span>평균 총합: -</span>
+            <span>최빈수: -</span>
+            <span>최다 궁합수: -</span>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="section-title">
+            <span>🎯 번호 생성 모드 및 전략 옵션</span>
+        </div>
+        
+        <div class="mode-select">
+            <label>
+                <input type="radio" name="poolMode" value="auto" checked onchange="toggleMode()"> 
+                선택 회차 통계 + 궁합수 자동 추출
+            </label>
+            <label>
+                <input type="radio" name="poolMode" value="custom" onchange="toggleMode()"> 
+                내 번호 풀 직접 입력
+            </label>
+        </div>
+
+        <div class="custom-input-box" id="customInputBox">
+            <span style="font-size:0.82rem; font-weight:bold; color:#333;">후보 번호 목록 입력 (띄어쓰기 또는 쉼표 구분):</span>
+            <textarea id="customTextInput" placeholder="예: 4 5 7 11 12 13 14 16 18 20 22 25 28 30 31 32 35 36 37 38 41" oninput="parseCustomNumbers()"></textarea>
+            <div class="pool-status" id="customPoolStatus">입력된 번호: 없음 (최소 6개 이상 필요)</div>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <span style="font-size:0.82rem; font-weight:bold; color:#c62828;">🚫 완전 제외수 지정 (띄어쓰기 또는 쉼표 구분):</span>
+            <input type="text" id="excludeInput" class="exclude-input" style="margin-top:4px;" placeholder="예: 1 13 45 (해당 번호는 모든 조합에서 배제됩니다)" oninput="parseExcludeNumbers()">
+            <div id="excludeStatus" style="font-size:0.78rem; color:#888; margin-top:3px;">제외된 번호: 없음</div>
+        </div>
+
+        <!-- 고급 옵션 패널 (첫 번호 짝수 & 마지막 번호 짝수 옵션) -->
+        <div class="advanced-options">
+            <label><input type="checkbox" id="chkEvenStart"> 첫 번호 짝수 고정</label>
+            <label><input type="checkbox" id="chkEvenEnd"> <b>마지막 번호 짝수 고정</b></label>
+            <label><input type="checkbox" id="chkClose40" checked> 40번대 마감</label>
+            <label><input type="checkbox" id="chkOmrGridBalance" checked> OMR 공간 균형 필터</label>
+            <label><input type="checkbox" id="chkCarryOverLimit" checked> 직전 이월수 0~2개 제한</label>
+            <label><input type="checkbox" id="chkBlockHistoryFirst" checked> 역대 1등 기출 조합 탈락</label>
+            <label><input type="checkbox" id="chkApplyPairWeight" checked> 상위 궁합수 우선 배정</label>
+            <label><input type="checkbox" id="chkConsecutiveBlock" checked> 3연번 이상 금지</label>
+            <label><input type="checkbox" id="chkSectionBalance" checked> 구간 몰림 방지 (최대 3개)</label>
+            <label><input type="checkbox" id="chkAcValue" checked> AC값 7 이상</label>
+        </div>
+    </div>
+
+    <button class="btn-generate" onclick="generateCombinations()">검증 및 백테스팅 통과 5게임 생성</button>
+
+    <div class="result-area" id="results"></div>
+</div>
+
+<script>
+const defaultFallbackData = [
+    { round: 1239, nums: [11, 13, 22, 32, 33, 36], bonus: 8 },
+    { round: 1238, nums: [2, 13, 18, 32, 38, 42], bonus: 22 },
+    { round: 1237, nums: [10, 20, 23, 34, 37, 40], bonus: 36 },
+    { round: 1236, nums: [12, 18, 21, 29, 34, 38], bonus: 10 },
+    { round: 1235, nums: [6, 7, 11, 15, 39, 43], bonus: 20 },
+    { round: 1234, nums: [1, 15, 19, 31, 35, 43], bonus: 27 },
+    { round: 1233, nums: [2, 7, 20, 25, 37, 40], bonus: 29 },
+    { round: 1232, nums: [12, 15, 19, 22, 24, 36], bonus: 3 },
+    { round: 1231, nums: [4, 13, 14, 18, 31, 38], bonus: 15 },
+    { round: 1230, nums: [3, 8, 9, 22, 28, 42], bonus: 45 },
+    { round: 1229, nums: [12, 13, 29, 34, 37, 42], bonus: 16 },
+    { round: 1228, nums: [24, 29, 30, 31, 35, 44], bonus: 1 },
+    { round: 1227, nums: [1, 14, 16, 34, 41, 44], bonus: 13 },
+    { round: 1226, nums: [4, 6, 13, 17, 26, 28], bonus: 41 },
+    { round: 1225, nums: [8, 9, 19, 25, 41, 42], bonus: 33 },
+    { round: 1224, nums: [9, 18, 21, 27, 44, 45], bonus: 28 },
+    { round: 1223, nums: [16, 18, 20, 32, 33, 39], bonus: 26 },
+    { round: 1222, nums: [4, 11, 17, 22, 32, 41], bonus: 34 },
+    { round: 1221, nums: [6, 13, 18, 28, 30, 36], bonus: 9 },
+    { round: 1220, nums: [2, 22, 25, 28, 34, 43], bonus: 16 }
+];
+
+let allHistoryData = [...defaultFallbackData];
+let hotNumbers = [];
+let autoPool = [];
+let latestBonus = 8;
+let latestMainNums = [11, 13, 22, 32, 33, 36];
+let userCustomPool = [];
+let userExcludeNums = [];
+let topPairs = [];
+
+const DB_NAME = 'LottoHistoryDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'historyStore';
+
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = function(e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function saveHistoryToStorage(data) {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put({ id: 'lotto_data', list: data });
+        return new Promise((resolve) => {
+            tx.oncomplete = () => {
+                document.getElementById('dbStatus').innerText = '(영구 보관 완료)';
+                document.getElementById('dbStatus').style.color = '#2e7d32';
+                resolve();
+            };
+        });
+    } catch (err) {
+        console.error("IndexedDB 저장 실패:", err);
+    }
+}
+
+async function loadHistoryFromStorage() {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get('lotto_data');
+        return new Promise((resolve) => {
+            req.onsuccess = () => {
+                if (req.result && req.result.list && req.result.list.length > 0) resolve(req.result.list);
+                else resolve(null);
+            };
+            req.onerror = () => resolve(null);
+        });
+    } catch (err) {
+        console.error("IndexedDB 로드 실패:", err);
+        return null;
+    }
+}
+
+async function resetStoredData() {
+    if (!confirm("저장된 엑셀 데이터를 초기화하고 기본 20회차 상태로 되돌리시겠습니까?")) return;
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = () => {
+            allHistoryData = [...defaultFallbackData];
+            recalculateStats();
+            document.getElementById('dbStatus').innerText = '(기본 데이터)';
+            document.getElementById('dbStatus').style.color = '#888';
+            alert("저장된 데이터가 초기화되었습니다.");
+        };
+    } catch (err) {
+        console.error("초기화 실패:", err);
+    }
+}
+
+function toggleMode() {
+    const isCustom = document.querySelector('input[name="poolMode"]:checked').value === 'custom';
+    document.getElementById('customInputBox').style.display = isCustom ? 'block' : 'none';
+}
+
+function parseCustomNumbers() {
+    const raw = document.getElementById('customTextInput').value;
+    const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
+    const nums = [];
+    for (let t of tokens) {
+        let n = parseInt(t, 10);
+        if (!isNaN(n) && n >= 1 && n <= 45 && !nums.includes(n)) nums.push(n);
+    }
+    nums.sort((a, b) => a - b);
+    userCustomPool = nums;
+    const status = document.getElementById('customPoolStatus');
+    status.innerHTML = nums.length > 0 ? `중복 제거된 번호 (${nums.length}개): <b>${nums.join(', ')}</b>` : '입력된 번호: 없음';
+}
+
+function parseExcludeNumbers() {
+    const raw = document.getElementById('excludeInput').value;
+    const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
+    const nums = [];
+    for (let t of tokens) {
+        let n = parseInt(t, 10);
+        if (!isNaN(n) && n >= 1 && n <= 45 && !nums.includes(n)) nums.push(n);
+    }
+    nums.sort((a, b) => a - b);
+    userExcludeNums = nums;
+    document.getElementById('excludeStatus').innerHTML = nums.length > 0 ? `제외 적용 중 (${nums.length}개): <b style="color:#c62828;">${nums.join(', ')}</b>` : '제외된 번호: 없음';
+}
+
+function calculatePairs(dataList) {
+    let pairCounts = {};
+    for (let r of dataList) {
+        let nums = r.nums;
+        for (let i = 0; i < nums.length; i++) {
+            for (let j = i + 1; j < nums.length; j++) {
+                let key = `${nums[i]}-${nums[j]}`;
+                pairCounts[key] = (pairCounts[key] || 0) + 1;
+            }
+        }
+    }
+    let sorted = Object.keys(pairCounts).map(k => {
+        let parts = k.split('-').map(Number);
+        return { n1: parts[0], n2: parts[1], count: pairCounts[k] };
+    }).sort((a, b) => b.count - a.count);
+    return sorted;
+}
+
+function recalculateStats() {
+    if (allHistoryData.length === 0) return;
+
+    allHistoryData.sort((a, b) => b.round - a.round);
+
+    const windowChoice = document.getElementById('windowSelect').value;
+    let targetSlice = allHistoryData;
+    if (windowChoice !== 'all') {
+        const count = parseInt(windowChoice, 10);
+        targetSlice = allHistoryData.slice(0, count);
+    }
+
+    const totalCount = allHistoryData.length;
+    document.getElementById('totalLoadedCount').innerText = `${allHistoryData[totalCount - 1].round}회 ~ ${allHistoryData[0].round}회 (총 ${totalCount.toLocaleString()}개 회차)`;
+
+    const sliceCount = targetSlice.length;
+    document.getElementById('currentRangeText').innerText = `[${targetSlice[sliceCount - 1].round}회 ~ ${targetSlice[0].round}회 분석 중]`;
+
+    latestBonus = allHistoryData[0].bonus;
+    latestMainNums = allHistoryData[0].nums;
+    document.getElementById('lastBonusTag').innerText = `직전 보너스: ${latestBonus}번 (이월 후보)`;
+
+    let counts = {};
+    let totalSum = 0;
+    for (let r of targetSlice) {
+        totalSum += r.nums.reduce((a, b) => a + b, 0);
+        for (let n of r.nums) counts[n] = (counts[n] || 0) + 1;
+    }
+
+    let avgSum = Math.round(totalSum / sliceCount);
+    let sortedNums = Object.keys(counts).map(Number).sort((a, b) => counts[b] - counts[a]);
+    
+    hotNumbers = sortedNums.slice(0, 12);
+    if (!hotNumbers.includes(latestBonus) && latestBonus > 0) hotNumbers.push(latestBonus);
+
+    autoPool = sortedNums;
+    if (!autoPool.includes(latestBonus) && latestBonus > 0) autoPool.push(latestBonus);
+
+    topPairs = calculatePairs(targetSlice);
+    let topPairStr = topPairs.length > 0 ? `${topPairs[0].n1}&${topPairs[0].n2}(${topPairs[0].count}회)` : '-';
+
+    document.getElementById('statsSummary').innerHTML = `
+        <span>평균 총합: ${avgSum}</span>
+        <span>최빈수: ${sortedNums.slice(0, 3).map(n => `${n}(${counts[n]}회)`).join(', ')}</span>
+        <span>최고 궁합: ${topPairStr}</span>
+    `;
+}
+
+async function addNewRoundManual() {
+    const r = parseInt(document.getElementById('inR').value);
+    const n1 = parseInt(document.getElementById('in1').value);
+    const n2 = parseInt(document.getElementById('in2').value);
+    const n3 = parseInt(document.getElementById('in3').value);
+    const n4 = parseInt(document.getElementById('in4').value);
+    const n5 = parseInt(document.getElementById('in5').value);
+    const n6 = parseInt(document.getElementById('in6').value);
+    const b = parseInt(document.getElementById('inB').value);
+
+    if (!r || !n1 || !n2 || !n3 || !n4 || !n5 || !n6) {
+        alert("회차와 6개 번호를 모두 입력해주세요.");
+        return;
+    }
+
+    let nums = [n1, n2, n3, n4, n5, n6].sort((a, b) => a - b);
+    allHistoryData.unshift({ round: r, nums: nums, bonus: b || 0 });
+    
+    await saveHistoryToStorage(allHistoryData);
+    recalculateStats();
+    alert(`${r}회차가 성공적으로 추가 및 영구 저장되었습니다.`);
+}
+
+function uploadExcel(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+        let loaded = [];
+        for (let row of json) {
+            if (!row || row.length < 8) continue;
+            let round = null;
+            let nums = [];
+            let bonus = 0;
+
+            for (let val of row) {
+                let num = parseInt(val, 10);
+                if (!isNaN(num) && num > 0) {
+                    if (round === null && num >= 1) round = num;
+                    else if (nums.length < 6 && num >= 1 && num <= 45) nums.push(num);
+                    else if (nums.length === 6 && bonus === 0 && num >= 1 && num <= 45) bonus = num;
+                }
+            }
+            if (round && nums.length === 6) {
+                nums.sort((a, b) => a - b);
+                loaded.push({ round: round, nums: nums, bonus: bonus });
+            }
+        }
+
+        if (loaded.length > 0) {
+            let map = new Map();
+            for (let item of loaded) map.set(item.round, item);
+            allHistoryData = Array.from(map.values()).sort((a, b) => b.round - a.round);
+
+            await saveHistoryToStorage(allHistoryData);
+            recalculateStats();
+            alert(`총 ${allHistoryData.length}개 회차 데이터를 성공적으로 불러왔습니다!`);
+        } else {
+            alert("엑셀 데이터 형식을 읽을 수 없습니다.");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function getBallClass(num) {
+    if (num <= 10) return 'ball-1';
+    if (num <= 20) return 'ball-2';
+    if (num <= 30) return 'ball-3';
+    if (num <= 40) return 'ball-4';
+    return 'ball-5';
+}
+
+function calculateAC(nums) {
+    let diffs = new Set();
+    for (let i = 0; i < nums.length; i++) {
+        for (let j = i + 1; j < nums.length; j++) diffs.add(Math.abs(nums[i] - nums[j]));
+    }
+    return diffs.size - (nums.length - 1);
+}
+
+function backtestCombo(combo) {
+    let matchCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let firstPrizeRounds = [];
+    let cSet = new Set(combo);
+
+    for (let r of allHistoryData) {
+        let m = 0;
+        for (let n of r.nums) if (cSet.has(n)) m++;
+
+        if (m === 6) {
+            matchCounts[1]++;
+            firstPrizeRounds.push(r.round);
+        } else if (m === 5 && cSet.has(r.bonus)) {
+            matchCounts[2]++;
+        } else if (m === 5) {
+            matchCounts[3]++;
+        } else if (m === 4) {
+            matchCounts[4]++;
+        } else if (m === 3) {
+            matchCounts[5]++;
+        }
+    }
+    return { 
+        hasFirst: matchCounts[1] > 0, 
+        firstRounds: firstPrizeRounds,
+        stats: matchCounts 
+    };
+}
+
+function checkOmrGridBalance(numbers) {
+    let rowCounts = [0, 0, 0, 0, 0, 0, 0];
+    let colCounts = [0, 0, 0, 0, 0, 0, 0];
+
+    for (let n of numbers) {
+        let r = Math.floor((n - 1) / 7);
+        let c = (n - 1) % 7;
+        rowCounts[r]++;
+        colCounts[c]++;
+    }
+
+    if (Math.max(...rowCounts) > 2) return false;
+    if (Math.max(...colCounts) > 2) return false;
+
+    let activeCols = colCounts.filter(cnt => cnt > 0).length;
+    if (activeCols < 4) return false;
+
+    return true;
+}
+
+function isValidCombination(numbers, reqEvenStart, reqEvenEnd, reqClose40, pool) {
+    if (userExcludeNums.some(ex => numbers.includes(ex))) return false;
+    
+    // 첫 번호 짝수 검증
+    if (reqEvenStart && numbers[0] % 2 !== 0) return false;
+
+    // 마지막 번호 짝수 검증
+    if (reqEvenEnd && numbers[5] % 2 !== 0) return false;
+
+    // 총합 110 ~ 160
+    const sum = numbers.reduce((a, b) => a + b, 0);
+    if (sum < 110 || sum > 160) return false;
+
+    // 홀짝 비율
+    const oddCount = numbers.filter(n => n % 2 !== 0).length;
+    if (oddCount !== 2 && oddCount !== 3 && oddCount !== 4) return false;
+
+    // 저고 비율
+    const lowCount = numbers.filter(n => n <= 22).length;
+    if (lowCount !== 3 && lowCount !== 4) return false;
+
+    // 동끝수 필수
+    const ends = numbers.map(n => n % 10);
+    if (new Set(ends).size === ends.length) return false;
+
+    // 40번대 마감
+    if (reqClose40 && pool.some(n => n >= 40) && numbers[5] < 40) return false;
+
+    // 이월수 0~2개 제한
+    if (document.getElementById('chkCarryOverLimit').checked) {
+        let carryCount = numbers.filter(n => latestMainNums.includes(n)).length;
+        if (carryCount > 2) return false;
+    }
+
+    // 3연번 이상 배제
+    if (document.getElementById('chkConsecutiveBlock').checked) {
+        let cur = 1, maxC = 1;
+        for (let i = 0; i < numbers.length - 1; i++) {
+            if (numbers[i + 1] === numbers[i] + 1) { cur++; maxC = Math.max(maxC, cur); }
+            else cur = 1;
+        }
+        if (maxC >= 3) return false;
+    }
+
+    // OMR 용지 공간 분석 필터
+    if (document.getElementById('chkOmrGridBalance').checked) {
+        if (!checkOmrGridBalance(numbers)) return false;
+    }
+
+    // 10진수 구간 몰림 방지
+    if (document.getElementById('chkSectionBalance').checked) {
+        let secCounts = [0, 0, 0, 0, 0];
+        for (let n of numbers) {
+            let sIdx = n <= 9 ? 0 : n <= 19 ? 1 : n <= 29 ? 2 : n <= 39 ? 3 : 4;
+            secCounts[sIdx]++;
+        }
+        if (Math.max(...secCounts) > 3) return false;
+        if (secCounts.filter(c => c > 0).length < 3) return false;
+    }
+
+    // AC값 7 이상
+    if (document.getElementById('chkAcValue').checked) {
+        if (calculateAC(numbers) < 7) return false;
+    }
+
+    // 역대 1등 기출 탈락
+    if (document.getElementById('chkBlockHistoryFirst').checked) {
+        let bResult = backtestCombo(numbers);
+        if (bResult.hasFirst) return false;
+    }
+
+    return true;
+}
+
+function generateSingleCombo(mode) {
+    let attempts = 0;
+    const isCustom = (mode === 'custom');
+    let pool = isCustom ? userCustomPool : autoPool;
+    
+    pool = pool.filter(n => !userExcludeNums.includes(n));
+    if (pool.length < 6) return null;
+
+    const reqEvenStart = document.getElementById('chkEvenStart').checked;
+    const reqEvenEnd = document.getElementById('chkEvenEnd').checked;
+    const reqClose40 = document.getElementById('chkClose40').checked;
+    const applyPairWeight = document.getElementById('chkApplyPairWeight').checked;
+
+    while (attempts < 35000) {
+        attempts++;
+        let selected = [];
+
+        if (applyPairWeight && topPairs.length > 0 && Math.random() < 0.5) {
+            let validPairs = topPairs.filter(p => pool.includes(p.n1) && pool.includes(p.n2));
+            if (validPairs.length > 0) {
+                let randomTopPair = validPairs[Math.floor(Math.random() * Math.min(validPairs.length, 10))];
+                selected.push(randomTopPair.n1, randomTopPair.n2);
+            }
+        }
+
+        if (!isCustom) {
+            let hotCopy = hotNumbers.filter(n => pool.includes(n) && !selected.includes(n)).sort(() => 0.5 - Math.random());
+            while (selected.length < 3 && hotCopy.length > 0) selected.push(hotCopy.pop());
+
+            let poolCopy = pool.filter(n => !selected.includes(n)).sort(() => 0.5 - Math.random());
+            while (selected.length < 6 && poolCopy.length > 0) selected.push(poolCopy.pop());
+        } else {
+            let poolCopy = pool.filter(n => !selected.includes(n)).sort(() => 0.5 - Math.random());
+            while (selected.length < 6 && poolCopy.length > 0) selected.push(poolCopy.pop());
+        }
+
+        selected.sort((a, b) => a - b);
+        if (selected.length === 6 && isValidCombination(selected, reqEvenStart, reqEvenEnd, reqClose40, pool)) {
+            return selected;
+        }
+    }
+    return null;
+}
+
+function renderOmrGridHtml(numbers) {
+    let cellsHtml = '';
+    const numSet = new Set(numbers);
+
+    for (let i = 1; i <= 49; i++) {
+        if (i <= 45) {
+            let isMarked = numSet.has(i);
+            cellsHtml += `<div class="omr-cell ${isMarked ? 'marked' : ''}">${i}</div>`;
+        } else {
+            cellsHtml += `<div class="omr-cell empty"></div>`;
+        }
+    }
+
+    return `
+        <div class="omr-preview-box">
+            <span class="omr-title">OMR 마킹 분포</span>
+            <div class="omr-grid">
+                ${cellsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function generateCombinations() {
+    const mode = document.querySelector('input[name="poolMode"]:checked').value;
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+
+    if (mode === 'custom' && userCustomPool.length < 6) {
+        alert("맞춤 번호 모드를 사용하려면 최소 6개 이상의 번호를 입력창에 넣어주세요.");
+        return;
+    }
+
+    const labels = ['A', 'B', 'C', 'D', 'E'];
+    let combos = [];
+    let attempts = 0;
+
+    while (combos.length < 5 && attempts < 90) {
+        attempts++;
+        let c = generateSingleCombo(mode);
+        if (c) {
+            let key = c.join(',');
+            if (!combos.some(existing => existing.join(',') === key)) {
+                combos.push(c);
+            }
+        }
+    }
+
+    if (combos.length === 0) {
+        container.innerHTML = `<div class="section-box" style="color:#d32f2f; text-align:center;">
+            설정된 조건(마지막 번호 짝수, OMR 공간 균형, 총합 110~160 등)을 모두 만족하는 조합을 찾지 못했습니다.<br>
+            후보 번호 풀을 넓히거나 체크박스를 조정해 보세요.
+        </div>`;
+        return;
+    }
+
+    for (let i = 0; i < combos.length; i++) {
+        const combo = combos[i];
+        const sum = combo.reduce((a, b) => a + b, 0);
+        const odd = combo.filter(n => n % 2 !== 0).length;
+        const even = 6 - odd;
+        const low = combo.filter(n => n <= 22).length;
+        const high = 6 - low;
+        const ac = calculateAC(combo);
+
+        const bTest = backtestCombo(combo);
+        let firstBadgeHtml = '';
+        if (bTest.hasFirst) {
+            firstBadgeHtml = `<span class="backtest-badge badge-1st-danger">🚨 역대 1등 당첨 이력 있음 (제${bTest.firstRounds.join(', ')}회)</span>`;
+        } else {
+            firstBadgeHtml = `<span class="backtest-badge badge-1st-clean">✅ 역대 1등 미출현 (안전)</span>`;
+        }
+
+        let historySummary = `<span class="badge-history-detail">누적 이력: 3등 ${bTest.stats[3]}회 | 4등 ${bTest.stats[4]}회 | 5등 ${bTest.stats[5]}회</span>`;
+
+        let ballsHtml = combo.map(n => `<div class="ball ${getBallClass(n)}">${n}</div>`).join('');
+        let omrHtml = renderOmrGridHtml(combo);
+
+        const card = document.createElement('div');
+        card.className = 'combo-card';
+        card.innerHTML = `
+            <div class="combo-header">
+                <span style="font-size:0.9rem;">게임 ${labels[i]} (${mode === 'custom' ? '맞춤 풀' : '통계 풀'})</span>
+                <div class="backtest-container">
+                    ${firstBadgeHtml}
+                    ${historySummary}
+                    <span style="margin-left:4px; font-weight:normal;">총합: ${sum} | AC: ${ac}</span>
+                </div>
+            </div>
+            <div class="combo-body">
+                <div class="combo-left">
+                    <div class="balls">${ballsHtml}</div>
+                    <div class="stats-text">
+                        홀짝 ${odd}:${even} | 저고 ${low}:${high} | 마감 번호 <b>${combo[5]}</b> (${combo[5] % 2 === 0 ? '짝수' : '홀수'})
+                    </div>
+                </div>
+                ${omrHtml}
+            </div>
+        `;
+        container.appendChild(card);
+    }
+}
+
+async function initApp() {
+    const saved = await loadHistoryFromStorage();
+    if (saved && saved.length > 0) {
+        allHistoryData = saved;
+        document.getElementById('dbStatus').innerText = '(영구 보관 복원됨)';
+        document.getElementById('dbStatus').style.color = '#2e7d32';
+    } else {
+        document.getElementById('dbStatus').innerText = '(기본 데이터)';
+        document.getElementById('dbStatus').style.color = '#888';
+    }
+    recalculateStats();
+}
+
+initApp();
+</script>
+
+</body>
+</html>
