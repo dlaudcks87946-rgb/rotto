@@ -332,7 +332,7 @@
 
     <div class="section-box">
         <div class="section-title">
-            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(영구 저장됨)</span></span>
+            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(서버 연동 대기중)</span></span>
             <span style="color:#d32f2f;" id="lastBonusTag">직전 보너스: -</span>
         </div>
 
@@ -416,7 +416,6 @@
             <div id="excludeStatus" style="font-size:0.78rem; color:#888; margin-top:3px;">제외된 번호: 없음</div>
         </div>
 
-        <!-- 고급 옵션 패널 (첫 번호 짝수 & 마지막 번호 짝수 옵션) -->
         <div class="advanced-options">
             <label><input type="checkbox" id="chkEvenStart"> 첫 번호 짝수 고정</label>
             <label><input type="checkbox" id="chkEvenEnd"> <b>마지막 번호 짝수 고정</b></label>
@@ -468,79 +467,6 @@ let latestMainNums = [11, 13, 22, 32, 33, 36];
 let userCustomPool = [];
 let userExcludeNums = [];
 let topPairs = [];
-
-const DB_NAME = 'LottoHistoryDB';
-const DB_VERSION = 1;
-const STORE_NAME = 'historyStore';
-
-function openDatabase() {
-    return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = function(e) {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-    });
-}
-
-async function saveHistoryToStorage(data) {
-    try {
-        const db = await openDatabase();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        store.put({ id: 'lotto_data', list: data });
-        return new Promise((resolve) => {
-            tx.oncomplete = () => {
-                document.getElementById('dbStatus').innerText = '(영구 보관 완료)';
-                document.getElementById('dbStatus').style.color = '#2e7d32';
-                resolve();
-            };
-        });
-    } catch (err) {
-        console.error("IndexedDB 저장 실패:", err);
-    }
-}
-
-async function loadHistoryFromStorage() {
-    try {
-        const db = await openDatabase();
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get('lotto_data');
-        return new Promise((resolve) => {
-            req.onsuccess = () => {
-                if (req.result && req.result.list && req.result.list.length > 0) resolve(req.result.list);
-                else resolve(null);
-            };
-            req.onerror = () => resolve(null);
-        });
-    } catch (err) {
-        console.error("IndexedDB 로드 실패:", err);
-        return null;
-    }
-}
-
-async function resetStoredData() {
-    if (!confirm("저장된 엑셀 데이터를 초기화하고 기본 20회차 상태로 되돌리시겠습니까?")) return;
-    try {
-        const db = await openDatabase();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).clear();
-        tx.oncomplete = () => {
-            allHistoryData = [...defaultFallbackData];
-            recalculateStats();
-            document.getElementById('dbStatus').innerText = '(기본 데이터)';
-            document.getElementById('dbStatus').style.color = '#888';
-            alert("저장된 데이터가 초기화되었습니다.");
-        };
-    } catch (err) {
-        console.error("초기화 실패:", err);
-    }
-}
 
 function toggleMode() {
     const isCustom = document.querySelector('input[name="poolMode"]:checked').value === 'custom';
@@ -658,9 +584,8 @@ async function addNewRoundManual() {
     let nums = [n1, n2, n3, n4, n5, n6].sort((a, b) => a - b);
     allHistoryData.unshift({ round: r, nums: nums, bonus: b || 0 });
     
-    await saveHistoryToStorage(allHistoryData);
     recalculateStats();
-    alert(`${r}회차가 성공적으로 추가 및 영구 저장되었습니다.`);
+    alert(`${r}회차가 추가되었습니다.`);
 }
 
 function uploadExcel(input) {
@@ -668,7 +593,7 @@ function uploadExcel(input) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -699,8 +624,6 @@ function uploadExcel(input) {
             let map = new Map();
             for (let item of loaded) map.set(item.round, item);
             allHistoryData = Array.from(map.values()).sort((a, b) => b.round - a.round);
-
-            await saveHistoryToStorage(allHistoryData);
             recalculateStats();
             alert(`총 ${allHistoryData.length}개 회차 데이터를 성공적으로 불러왔습니다!`);
         } else {
@@ -708,6 +631,13 @@ function uploadExcel(input) {
         }
     };
     reader.readAsArrayBuffer(file);
+}
+
+function resetStoredData() {
+    if (!confirm("데이터를 초기화하시겠습니까?")) return;
+    allHistoryData = [...defaultFallbackData];
+    recalculateStats();
+    alert("초기화되었습니다.");
 }
 
 function getBallClass(num) {
@@ -768,48 +698,35 @@ function checkOmrGridBalance(numbers) {
 
     if (Math.max(...rowCounts) > 2) return false;
     if (Math.max(...colCounts) > 2) return false;
-
-    let activeCols = colCounts.filter(cnt => cnt > 0).length;
-    if (activeCols < 4) return false;
+    if (colCounts.filter(cnt => cnt > 0).length < 4) return false;
 
     return true;
 }
 
 function isValidCombination(numbers, reqEvenStart, reqEvenEnd, reqClose40, pool) {
     if (userExcludeNums.some(ex => numbers.includes(ex))) return false;
-    
-    // 첫 번호 짝수 검증
     if (reqEvenStart && numbers[0] % 2 !== 0) return false;
-
-    // 마지막 번호 짝수 검증
     if (reqEvenEnd && numbers[5] % 2 !== 0) return false;
 
-    // 총합 110 ~ 160
     const sum = numbers.reduce((a, b) => a + b, 0);
     if (sum < 110 || sum > 160) return false;
 
-    // 홀짝 비율
     const oddCount = numbers.filter(n => n % 2 !== 0).length;
     if (oddCount !== 2 && oddCount !== 3 && oddCount !== 4) return false;
 
-    // 저고 비율
     const lowCount = numbers.filter(n => n <= 22).length;
     if (lowCount !== 3 && lowCount !== 4) return false;
 
-    // 동끝수 필수
     const ends = numbers.map(n => n % 10);
     if (new Set(ends).size === ends.length) return false;
 
-    // 40번대 마감
     if (reqClose40 && pool.some(n => n >= 40) && numbers[5] < 40) return false;
 
-    // 이월수 0~2개 제한
     if (document.getElementById('chkCarryOverLimit').checked) {
         let carryCount = numbers.filter(n => latestMainNums.includes(n)).length;
         if (carryCount > 2) return false;
     }
 
-    // 3연번 이상 배제
     if (document.getElementById('chkConsecutiveBlock').checked) {
         let cur = 1, maxC = 1;
         for (let i = 0; i < numbers.length - 1; i++) {
@@ -819,12 +736,10 @@ function isValidCombination(numbers, reqEvenStart, reqEvenEnd, reqClose40, pool)
         if (maxC >= 3) return false;
     }
 
-    // OMR 용지 공간 분석 필터
     if (document.getElementById('chkOmrGridBalance').checked) {
         if (!checkOmrGridBalance(numbers)) return false;
     }
 
-    // 10진수 구간 몰림 방지
     if (document.getElementById('chkSectionBalance').checked) {
         let secCounts = [0, 0, 0, 0, 0];
         for (let n of numbers) {
@@ -835,12 +750,10 @@ function isValidCombination(numbers, reqEvenStart, reqEvenEnd, reqClose40, pool)
         if (secCounts.filter(c => c > 0).length < 3) return false;
     }
 
-    // AC값 7 이상
     if (document.getElementById('chkAcValue').checked) {
         if (calculateAC(numbers) < 7) return false;
     }
 
-    // 역대 1등 기출 탈락
     if (document.getElementById('chkBlockHistoryFirst').checked) {
         let bResult = backtestCombo(numbers);
         if (bResult.hasFirst) return false;
@@ -922,7 +835,7 @@ function generateCombinations() {
     container.innerHTML = '';
 
     if (mode === 'custom' && userCustomPool.length < 6) {
-        alert("맞춤 번호 모드를 사용하려면 최소 6개 이상의 번호를 입력창에 넣어주세요.");
+        alert("맞춤 번호 모드를 사용하려면 최소 6개 이상의 번호를 입력해주세요.");
         return;
     }
 
@@ -943,8 +856,7 @@ function generateCombinations() {
 
     if (combos.length === 0) {
         container.innerHTML = `<div class="section-box" style="color:#d32f2f; text-align:center;">
-            설정된 조건(마지막 번호 짝수, OMR 공간 균형, 총합 110~160 등)을 모두 만족하는 조합을 찾지 못했습니다.<br>
-            후보 번호 풀을 넓히거나 체크박스를 조정해 보세요.
+            조건을 만족하는 조합을 찾지 못했습니다. 설정을 조정해 보세요.
         </div>`;
         return;
     }
@@ -959,15 +871,11 @@ function generateCombinations() {
         const ac = calculateAC(combo);
 
         const bTest = backtestCombo(combo);
-        let firstBadgeHtml = '';
-        if (bTest.hasFirst) {
-            firstBadgeHtml = `<span class="backtest-badge badge-1st-danger">🚨 역대 1등 당첨 이력 있음 (제${bTest.firstRounds.join(', ')}회)</span>`;
-        } else {
-            firstBadgeHtml = `<span class="backtest-badge badge-1st-clean">✅ 역대 1등 미출현 (안전)</span>`;
-        }
+        let firstBadgeHtml = bTest.hasFirst ? 
+            `<span class="backtest-badge badge-1st-danger">🚨 역대 1등 이력 있음 (${bTest.firstRounds.join(',')}회)</span>` : 
+            `<span class="backtest-badge badge-1st-clean">✅ 역대 1등 미출현 (안전)</span>`;
 
         let historySummary = `<span class="badge-history-detail">누적 이력: 3등 ${bTest.stats[3]}회 | 4등 ${bTest.stats[4]}회 | 5등 ${bTest.stats[5]}회</span>`;
-
         let ballsHtml = combo.map(n => `<div class="ball ${getBallClass(n)}">${n}</div>`).join('');
         let omrHtml = renderOmrGridHtml(combo);
 
@@ -975,7 +883,7 @@ function generateCombinations() {
         card.className = 'combo-card';
         card.innerHTML = `
             <div class="combo-header">
-                <span style="font-size:0.9rem;">게임 ${labels[i]} (${mode === 'custom' ? '맞춤 풀' : '통계 풀'})</span>
+                <span style="font-size:0.9rem;">게임 ${labels[i]}</span>
                 <div class="backtest-container">
                     ${firstBadgeHtml}
                     ${historySummary}
@@ -985,9 +893,7 @@ function generateCombinations() {
             <div class="combo-body">
                 <div class="combo-left">
                     <div class="balls">${ballsHtml}</div>
-                    <div class="stats-text">
-                        홀짝 ${odd}:${even} | 저고 ${low}:${high} | 마감 번호 <b>${combo[5]}</b> (${combo[5] % 2 === 0 ? '짝수' : '홀수'})
-                    </div>
+                    <div class="stats-text">홀짝 ${odd}:${even} | 저고 ${low}:${high} | 마감 번호 <b>${combo[5]}</b></div>
                 </div>
                 ${omrHtml}
             </div>
@@ -997,14 +903,16 @@ function generateCombinations() {
 }
 
 async function initApp() {
-    const saved = await loadHistoryFromStorage();
-    if (saved && saved.length > 0) {
-        allHistoryData = saved;
-        document.getElementById('dbStatus').innerText = '(영구 보관 복원됨)';
-        document.getElementById('dbStatus').style.color = '#2e7d32';
-    } else {
-        document.getElementById('dbStatus').innerText = '(기본 데이터)';
-        document.getElementById('dbStatus').style.color = '#888';
+    try {
+        const response = await fetch('/api/lotto');
+        const serverData = await response.json();
+        if (serverData && serverData.length > 0) {
+            allHistoryData = serverData;
+            document.getElementById('dbStatus').innerText = '(Railway 서버 실시간 동기화 완료)';
+            document.getElementById('dbStatus').style.color = '#2e7d32';
+        }
+    } catch (err) {
+        console.warn("서버 연동 실패, 기본 데이터 사용");
     }
     recalculateStats();
 }
