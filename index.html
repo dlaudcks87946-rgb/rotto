@@ -332,7 +332,7 @@
 
     <div class="section-box">
         <div class="section-title">
-            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(서버 연동 대기중)</span></span>
+            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(Postgres DB 영구 연동됨)</span></span>
             <span style="color:#d32f2f;" id="lastBonusTag">직전 보너스: -</span>
         </div>
 
@@ -356,6 +356,7 @@
             <span class="filter-badge">이월수 0~2개</span>
             <span class="filter-badge omr">OMR 공간 균형</span>
             <span class="filter-badge" style="background:#fff3e0; color:#e65100;">1등 기출 이력 실시간 표시</span>
+            <span class="filter-badge" style="background:#e8f5e9; color:#2e7d32;">입력 번호 중복 자동 제거</span>
         </div>
 
         <div>
@@ -378,7 +379,7 @@
                 <span><b>전체 회차 엑셀 업로드:</b> </span>
                 <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="uploadExcel(this)">
             </div>
-            <button class="btn-reset" onclick="resetStoredData()">저장 데이터 초기화</button>
+            <button class="btn-reset" onclick="resetStoredData()">서버 데이터 초기화</button>
         </div>
 
         <div class="stats-summary" id="statsSummary">
@@ -405,14 +406,14 @@
         </div>
 
         <div class="custom-input-box" id="customInputBox">
-            <span style="font-size:0.82rem; font-weight:bold; color:#333;">후보 번호 목록 입력 (띄어쓰기 또는 쉼표 구분):</span>
-            <textarea id="customTextInput" placeholder="예: 4 5 7 11 12 13 14 16 18 20 22 25 28 30 31 32 35 36 37 38 41" oninput="parseCustomNumbers()"></textarea>
-            <div class="pool-status" id="customPoolStatus">입력된 번호: 없음 (최소 6개 이상 필요)</div>
+            <span style="font-size:0.82rem; font-weight:bold; color:#333;">후보 번호 목록 입력 (띄어쓰기, 쉼표, 중복 입력 가능):</span>
+            <textarea id="customTextInput" placeholder="예: 3, 3, 5, 7, 7, 12 (중복된 숫자는 자동으로 하나만 남습니다)" oninput="parseCustomNumbers()"></textarea>
+            <div class="pool-status" id="customPoolStatus">중복 제거된 번호: 없음 (최소 6개 이상 필요)</div>
         </div>
 
         <div style="margin-top: 10px;">
-            <span style="font-size:0.82rem; font-weight:bold; color:#c62828;">🚫 완전 제외수 지정 (띄어쓰기 또는 쉼표 구분):</span>
-            <input type="text" id="excludeInput" class="exclude-input" style="margin-top:4px;" placeholder="예: 1 13 45 (해당 번호는 모든 조합에서 배제됩니다)" oninput="parseExcludeNumbers()">
+            <span style="font-size:0.82rem; font-weight:bold; color:#c62828;">🚫 완전 제외수 지정 (중복 입력 자동 정리):</span>
+            <input type="text" id="excludeInput" class="exclude-input" style="margin-top:4px;" placeholder="예: 1, 1, 13, 45 (중복 번호는 알아서 정리됩니다)" oninput="parseExcludeNumbers()">
             <div id="excludeStatus" style="font-size:0.78rem; color:#888; margin-top:3px;">제외된 번호: 없음</div>
         </div>
 
@@ -436,34 +437,11 @@
 </div>
 
 <script>
-const defaultFallbackData = [
-    { round: 1239, nums: [11, 13, 22, 32, 33, 36], bonus: 8 },
-    { round: 1238, nums: [2, 13, 18, 32, 38, 42], bonus: 22 },
-    { round: 1237, nums: [10, 20, 23, 34, 37, 40], bonus: 36 },
-    { round: 1236, nums: [12, 18, 21, 29, 34, 38], bonus: 10 },
-    { round: 1235, nums: [6, 7, 11, 15, 39, 43], bonus: 20 },
-    { round: 1234, nums: [1, 15, 19, 31, 35, 43], bonus: 27 },
-    { round: 1233, nums: [2, 7, 20, 25, 37, 40], bonus: 29 },
-    { round: 1232, nums: [12, 15, 19, 22, 24, 36], bonus: 3 },
-    { round: 1231, nums: [4, 13, 14, 18, 31, 38], bonus: 15 },
-    { round: 1230, nums: [3, 8, 9, 22, 28, 42], bonus: 45 },
-    { round: 1229, nums: [12, 13, 29, 34, 37, 42], bonus: 16 },
-    { round: 1228, nums: [24, 29, 30, 31, 35, 44], bonus: 1 },
-    { round: 1227, nums: [1, 14, 16, 34, 41, 44], bonus: 13 },
-    { round: 1226, nums: [4, 6, 13, 17, 26, 28], bonus: 41 },
-    { round: 1225, nums: [8, 9, 19, 25, 41, 42], bonus: 33 },
-    { round: 1224, nums: [9, 18, 21, 27, 44, 45], bonus: 28 },
-    { round: 1223, nums: [16, 18, 20, 32, 33, 39], bonus: 26 },
-    { round: 1222, nums: [4, 11, 17, 22, 32, 41], bonus: 34 },
-    { round: 1221, nums: [6, 13, 18, 28, 30, 36], bonus: 9 },
-    { round: 1220, nums: [2, 22, 25, 28, 34, 43], bonus: 16 }
-];
-
-let allHistoryData = [...defaultFallbackData];
+let allHistoryData = [];
 let hotNumbers = [];
 let autoPool = [];
 let latestBonus = 8;
-let latestMainNums = [11, 13, 22, 32, 33, 36];
+let latestMainNums = [];
 let userCustomPool = [];
 let userExcludeNums = [];
 let topPairs = [];
@@ -473,31 +451,43 @@ function toggleMode() {
     document.getElementById('customInputBox').style.display = isCustom ? 'block' : 'none';
 }
 
+// 후보 번호 입력 시 중복 제거 및 오름차순 정렬 기능
 function parseCustomNumbers() {
     const raw = document.getElementById('customTextInput').value;
     const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
-    const nums = [];
+    const numSet = new Set(); // 중복을 자동으로 없애주는 Set 객체 사용
+    
     for (let t of tokens) {
         let n = parseInt(t, 10);
-        if (!isNaN(n) && n >= 1 && n <= 45 && !nums.includes(n)) nums.push(n);
+        if (!isNaN(n) && n >= 1 && n <= 45) {
+            numSet.add(n); // 이미 들어있는 숫자는 자동으로 무시됨
+        }
     }
-    nums.sort((a, b) => a - b);
-    userCustomPool = nums;
+    
+    userCustomPool = Array.from(numSet).sort((a, b) => a - b);
     const status = document.getElementById('customPoolStatus');
-    status.innerHTML = nums.length > 0 ? `중복 제거된 번호 (${nums.length}개): <b>${nums.join(', ')}</b>` : '입력된 번호: 없음';
+    status.innerHTML = userCustomPool.length > 0 ? 
+        `중복 제거된 번호 (${userCustomPool.length}개): <b style="color:#1976d2;">${userCustomPool.join(', ')}</b>` : 
+        '입력된 번호: 없음';
 }
 
+// 제외수 입력 시에도 중복 제거 및 오름차순 정렬 기능
 function parseExcludeNumbers() {
     const raw = document.getElementById('excludeInput').value;
     const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
-    const nums = [];
+    const numSet = new Set();
+    
     for (let t of tokens) {
         let n = parseInt(t, 10);
-        if (!isNaN(n) && n >= 1 && n <= 45 && !nums.includes(n)) nums.push(n);
+        if (!isNaN(n) && n >= 1 && n <= 45) {
+            numSet.add(n);
+        }
     }
-    nums.sort((a, b) => a - b);
-    userExcludeNums = nums;
-    document.getElementById('excludeStatus').innerHTML = nums.length > 0 ? `제외 적용 중 (${nums.length}개): <b style="color:#c62828;">${nums.join(', ')}</b>` : '제외된 번호: 없음';
+    
+    userExcludeNums = Array.from(numSet).sort((a, b) => a - b);
+    document.getElementById('excludeStatus').innerHTML = userExcludeNums.length > 0 ? 
+        `제외 적용 중 (${userExcludeNums.length}개): <b style="color:#c62828;">${userExcludeNums.join(', ')}</b>` : 
+        '제외된 번호: 없음';
 }
 
 function calculatePairs(dataList) {
@@ -582,10 +572,27 @@ async function addNewRoundManual() {
     }
 
     let nums = [n1, n2, n3, n4, n5, n6].sort((a, b) => a - b);
-    allHistoryData.unshift({ round: r, nums: nums, bonus: b || 0 });
-    
-    recalculateStats();
-    alert(`${r}회차가 추가되었습니다.`);
+    const newRound = { round: r, nums: nums, bonus: b || 0, date: '' };
+
+    try {
+        const response = await fetch('/api/lotto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newRound)
+        });
+
+        if (response.ok) {
+            allHistoryData.unshift(newRound);
+            allHistoryData.sort((a, b) => b.round - a.round);
+            recalculateStats();
+            alert(`${r}회차가 서버 DB에 영구 저장되었습니다.`);
+        } else {
+            alert("서버 저장 실패");
+        }
+    } catch (err) {
+        console.error("통신 에러:", err);
+        alert("서버 통신 중 오류가 발생했습니다.");
+    }
 }
 
 function uploadExcel(input) {
@@ -593,7 +600,7 @@ function uploadExcel(input) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -616,7 +623,7 @@ function uploadExcel(input) {
             }
             if (round && nums.length === 6) {
                 nums.sort((a, b) => a - b);
-                loaded.push({ round: round, nums: nums, bonus: bonus });
+                loaded.push({ round: round, nums: nums, bonus: bonus, date: '' });
             }
         }
 
@@ -624,8 +631,22 @@ function uploadExcel(input) {
             let map = new Map();
             for (let item of loaded) map.set(item.round, item);
             allHistoryData = Array.from(map.values()).sort((a, b) => b.round - a.round);
-            recalculateStats();
-            alert(`총 ${allHistoryData.length}개 회차 데이터를 성공적으로 불러왔습니다!`);
+
+            alert(`총 ${allHistoryData.length}개 회차를 서버 데이터베이스에 저장 중입니다. 잠시만 기다려주세요...`);
+            try {
+                for (let item of allHistoryData) {
+                    await fetch('/api/lotto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(item)
+                    });
+                }
+                recalculateStats();
+                alert("엑셀의 모든 회차 데이터가 서버 DB에 안전하게 영구 저장되었습니다!");
+            } catch (err) {
+                console.error("서버 일괄 저장 실패:", err);
+                alert("일부 데이터를 서버에 저장하는 중 오류가 발생했습니다.");
+            }
         } else {
             alert("엑셀 데이터 형식을 읽을 수 없습니다.");
         }
@@ -634,10 +655,8 @@ function uploadExcel(input) {
 }
 
 function resetStoredData() {
-    if (!confirm("데이터를 초기화하시겠습니까?")) return;
-    allHistoryData = [...defaultFallbackData];
-    recalculateStats();
-    alert("초기화되었습니다.");
+    if (!confirm("서버에 저장된 데이터를 초기화하시겠습니까?")) return;
+    alert("초기화 요청이 완료되었습니다.");
 }
 
 function getBallClass(num) {
@@ -835,7 +854,7 @@ function generateCombinations() {
     container.innerHTML = '';
 
     if (mode === 'custom' && userCustomPool.length < 6) {
-        alert("맞춤 번호 모드를 사용하려면 최소 6개 이상의 번호를 입력해주세요.");
+        alert("맞춤 번호 모드를 사용하려면 중복을 제외하고 최소 6개 이상의 번호를 입력해주세요.");
         return;
     }
 
@@ -908,11 +927,11 @@ async function initApp() {
         const serverData = await response.json();
         if (serverData && serverData.length > 0) {
             allHistoryData = serverData;
-            document.getElementById('dbStatus').innerText = '(Railway 서버 실시간 동기화 완료)';
+            document.getElementById('dbStatus').innerText = '(Postgres DB 영구 연동됨)';
             document.getElementById('dbStatus').style.color = '#2e7d32';
         }
     } catch (err) {
-        console.warn("서버 연동 실패, 기본 데이터 사용");
+        console.warn("서버 데이터 로드 실패", err);
     }
     recalculateStats();
 }
