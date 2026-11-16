@@ -451,16 +451,15 @@ function toggleMode() {
     document.getElementById('customInputBox').style.display = isCustom ? 'block' : 'none';
 }
 
-// 후보 번호 입력 시 중복 제거 및 오름차순 정렬 기능
 function parseCustomNumbers() {
     const raw = document.getElementById('customTextInput').value;
     const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
-    const numSet = new Set(); // 중복을 자동으로 없애주는 Set 객체 사용
+    const numSet = new Set();
     
     for (let t of tokens) {
         let n = parseInt(t, 10);
         if (!isNaN(n) && n >= 1 && n <= 45) {
-            numSet.add(n); // 이미 들어있는 숫자는 자동으로 무시됨
+            numSet.add(n);
         }
     }
     
@@ -471,7 +470,6 @@ function parseCustomNumbers() {
         '입력된 번호: 없음';
 }
 
-// 제외수 입력 시에도 중복 제거 및 오름차순 정렬 기능
 function parseExcludeNumbers() {
     const raw = document.getElementById('excludeInput').value;
     const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
@@ -595,6 +593,7 @@ async function addNewRoundManual() {
     }
 }
 
+// 엑셀 업로드 시 대용량 데이터도 안정적으로 서버 DB에 한 번에 동기화하도록 개선
 function uploadExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -632,20 +631,25 @@ function uploadExcel(input) {
             for (let item of loaded) map.set(item.round, item);
             allHistoryData = Array.from(map.values()).sort((a, b) => b.round - a.round);
 
-            alert(`총 ${allHistoryData.length}개 회차를 서버 데이터베이스에 저장 중입니다. 잠시만 기다려주세요...`);
+            alert(`총 ${allHistoryData.length}개 회차 데이터를 서버 DB에 저장하고 있습니다. 완료될 때까지 창을 닫지 마세요!`);
+            
             try {
-                for (let item of allHistoryData) {
-                    await fetch('/api/lotto', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(item)
-                    });
+                // 한 번에 모든 데이터를 서버로 전송하여 DB에 영구 반영
+                const response = await fetch('/api/lotto/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(allHistoryData)
+                });
+
+                if (response.ok) {
+                    recalculateStats();
+                    alert("엑셀의 모든 회차 데이터가 서버 PostgreSQL DB에 안전하게 영구 저장되었습니다! 새로고침해도 유지됩니다.");
+                } else {
+                    alert("서버 일괄 저장 중 오류가 발생했습니다.");
                 }
-                recalculateStats();
-                alert("엑셀의 모든 회차 데이터가 서버 DB에 안전하게 영구 저장되었습니다!");
             } catch (err) {
-                console.error("서버 일괄 저장 실패:", err);
-                alert("일부 데이터를 서버에 저장하는 중 오류가 발생했습니다.");
+                console.error("서버 일괄 저장 통신 실패:", err);
+                alert("서버 통신 중 에러가 발생했습니다.");
             }
         } else {
             alert("엑셀 데이터 형식을 읽을 수 없습니다.");
