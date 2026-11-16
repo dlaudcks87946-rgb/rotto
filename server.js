@@ -13,10 +13,10 @@ const pool = new Pool({
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // 대용량 엑셀 데이터를 받기 위해 용량 제한 해제
 app.use(express.static(__dirname));
 
-// 데이터베이스 테이블 초기화 및 기본 데이터 적재
+// 데이터베이스 테이블 초기화
 async function initDB() {
     try {
         await pool.query(`
@@ -28,31 +28,11 @@ async function initDB() {
             )
         `);
 
-        // 테이블이 비어있다면 기본 데이터(최근 회차들) 삽입
         const res = await pool.query('SELECT COUNT(*) FROM lotto_history');
         if (parseInt(res.rows[0].count) === 0) {
             console.log("[DB 초기화] 기본 회차 데이터를 적재합니다...");
             const defaultData = [
-                { round: 1239, nums: [11, 13, 22, 32, 33, 36], bonus: 8 },
-                { round: 1238, nums: [2, 13, 18, 32, 38, 42], bonus: 22 },
-                { round: 1237, nums: [10, 20, 23, 34, 37, 40], bonus: 36 },
-                { round: 1236, nums: [12, 18, 21, 29, 34, 38], bonus: 10 },
-                { round: 1235, nums: [6, 7, 11, 15, 39, 43], bonus: 20 },
-                { round: 1234, nums: [1, 15, 19, 31, 35, 43], bonus: 27 },
-                { round: 1233, nums: [2, 7, 20, 25, 37, 40], bonus: 29 },
-                { round: 1232, nums: [12, 15, 19, 22, 24, 36], bonus: 3 },
-                { round: 1231, nums: [4, 13, 14, 18, 31, 38], bonus: 15 },
-                { round: 1230, nums: [3, 8, 9, 22, 28, 42], bonus: 45 },
-                { round: 1229, nums: [12, 13, 29, 34, 37, 42], bonus: 16 },
-                { round: 1228, nums: [24, 29, 30, 31, 35, 44], bonus: 1 },
-                { round: 1227, nums: [1, 14, 16, 34, 41, 44], bonus: 13 },
-                { round: 1226, nums: [4, 6, 13, 17, 26, 28], bonus: 41 },
-                { round: 1225, nums: [8, 9, 19, 25, 41, 42], bonus: 33 },
-                { round: 1224, nums: [9, 18, 21, 27, 44, 45], bonus: 28 },
-                { round: 1223, nums: [16, 18, 20, 32, 33, 39], bonus: 26 },
-                { round: 1222, nums: [4, 11, 17, 22, 32, 41], bonus: 34 },
-                { round: 1221, nums: [6, 13, 18, 28, 30, 36], bonus: 9 },
-                { round: 1220, nums: [2, 22, 25, 28, 34, 43], bonus: 16 }
+                { round: 1239, nums: [11, 13, 22, 32, 33, 36], bonus: 8 }
             ];
 
             for (let item of defaultData) {
@@ -105,7 +85,7 @@ async function checkAndUpdateLatestLotto() {
         let newData = await fetchLottoRound(targetRound);
         if (newData) {
             await pool.query(
-                'INSERT INTO lotto_history (round, nums, bonus, date) VALUES ($1, $2, $3, $4) ON CONFLICT (round) DO NOTHING',
+                'INSERT INTO lotto_history (round, nums, bonus, date) VALUES ($1, $2, $3, $4) ON CONFLICT (round) DO UPDATE SET nums = EXCLUDED.nums, bonus = EXCLUDED.bonus',
                 [newData.round, JSON.stringify(newData.nums), newData.bonus, newData.date]
             );
             console.log(`🎉 [업데이트 성공] 제${targetRound}회차 당첨번호가 DB에 저장되었습니다!`);
@@ -129,7 +109,7 @@ app.get('/api/lotto', async (req, res) => {
     }
 });
 
-// API: 수동 회차 추가 또는 엑셀 일괄 업로드 저장 지원
+// API: 단건 저장
 app.post('/api/lotto', async (req, res) => {
     const { round, nums, bonus, date } = req.body;
     try {
@@ -141,6 +121,27 @@ app.post('/api/lotto', async (req, res) => {
     } catch (err) {
         console.error("데이터 저장 실패:", err);
         res.status(500).json({ error: "Database error" });
+    }
+});
+
+// API: 엑셀 대용량 일괄 저장 (Batch)
+app.post('/api/lotto/batch', async (req, res) => {
+    const items = req.body;
+    if (!Array.isArray(items)) {
+        return res.status(400).json({ error: "Invalid data format" });
+    }
+
+    try {
+        for (let item of items) {
+            await pool.query(
+                'INSERT INTO lotto_history (round, nums, bonus, date) VALUES ($1, $2, $3, $4) ON CONFLICT (round) DO UPDATE SET nums = EXCLUDED.nums, bonus = EXCLUDED.bonus',
+                [item.round, JSON.stringify(item.nums), item.bonus, item.date || '']
+            );
+        }
+        res.json({ success: true, count: items.length });
+    } catch (err) {
+        console.error("일괄 저장 실패:", err);
+        res.status(500).json({ error: "Database batch error" });
     }
 });
 
