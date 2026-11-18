@@ -3,303 +3,245 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>로또 6/45 번호 생성기 (공동 당첨 회피형)</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<title>🎰 로또 추첨기 놀이터</title>
 <style>
-body{font-family:'Pretendard',-apple-system,'Segoe UI',Roboto,sans-serif;background:#f1f3f5;margin:0;padding:20px;display:flex;justify-content:center}
-.container{width:100%;max-width:780px;background:#fff;border-radius:12px;padding:25px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-h1{font-size:1.3rem;text-align:center;margin:0 0 15px}
-.box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;margin-bottom:15px;font-size:.88rem}
-.notice{background:#fff8e1;border:1px solid #ffe082;color:#5d4037;border-radius:8px;padding:12px 14px;font-size:.82rem;margin-bottom:15px;line-height:1.5}
-.title{font-weight:bold;color:#495057;margin-bottom:8px}
-.opts{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:.82rem;color:#495057}
-.row{display:flex;gap:6px;margin-top:8px}
-.row input{width:42px;padding:6px 0;text-align:center;border:1px solid #ced4da;border-radius:4px;font-weight:bold}
-.row button,.btn-small{padding:6px 12px;background:#495057;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:bold}
-textarea,.txt{width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;box-sizing:border-box;font-family:inherit}
-textarea{height:50px}
-.modes{display:flex;gap:12px;margin:10px 0}
-#customBox{display:none;margin-top:8px}
-.small{font-size:.78rem;color:#777;margin-top:4px}
-.btn-gen{width:100%;padding:14px;font-size:1.05rem;font-weight:bold;color:#fff;background:#d32f2f;border:none;border-radius:8px;cursor:pointer}
-.btn-gen:hover{background:#b71c1c}
-.results{margin-top:20px;display:flex;flex-direction:column;gap:12px}
-.card{border:1px solid #e0e0e0;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
-.head{display:flex;justify-content:space-between;font-size:.82rem;font-weight:bold;color:#666;flex-wrap:wrap;gap:6px}
-.body{display:flex;align-items:center;justify-content:space-between;gap:15px}
-.balls{display:flex;gap:5px}
-.ball{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.88rem;color:#fff}
-.b1{background:#fbc400}.b2{background:#69c8f2}.b3{background:#ff7272}.b4{background:#aaa}.b5{background:#b0d840}
-.omr{background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:5px 6px}
-.grid{display:grid;grid-template-columns:repeat(7,13px);gap:2px}
-.cell{width:13px;height:9px;font-size:6.5px;border-radius:1px;background:#eef0f2;color:#aaa;display:flex;align-items:center;justify-content:center}
-.cell.m{background:#d32f2f;color:#fff;font-weight:bold}
-.cell.e{visibility:hidden}
+body{font-family:'Pretendard',-apple-system,'Segoe UI',Roboto,sans-serif;background:#1b1f3b;margin:0;padding:16px;display:flex;justify-content:center;color:#222}
+.wrap{width:100%;max-width:760px}
+h1{color:#fff;text-align:center;font-size:1.4rem;margin:6px 0 12px}
+.notice{background:#2a2f55;color:#cfd3f5;border-radius:10px;padding:10px 14px;font-size:.8rem;line-height:1.5;margin-bottom:14px}
+.panel{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px}
+.machine{display:flex;flex-direction:column;align-items:center;gap:10px}
+canvas{background:radial-gradient(circle,#fdfdff,#dfe3f7);border-radius:50%;border:6px solid #5c6bc0;box-shadow:0 0 25px rgba(92,107,192,.5)}
+.tray{display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 12px;background:#eef0fb;border-radius:30px}
+.plus{font-weight:bold;color:#888}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+.btn{flex:1;min-width:150px;padding:12px;border:none;border-radius:10px;font-weight:bold;font-size:.95rem;color:#fff;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.96)}
+.b-gen{background:#e53935}.b-draw{background:#5c6bc0}.b-sim{background:#2e7d32}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.opts{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:#444;margin-bottom:10px}
+.txt{padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:.82rem}
+.ball{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.9rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);box-shadow:inset -3px -4px 6px rgba(0,0,0,.2),inset 3px 3px 6px rgba(255,255,255,.4)}
+.c1{background:#fbc400}.c2{background:#69c8f2}.c3{background:#ff7272}.c4{background:#999}.c5{background:#9ccc3a}
+.pop{animation:pop .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{0%{transform:translateY(-90px) scale(.2);opacity:0}100%{transform:none;opacity:1}}
+.card{border:1px solid #e3e3ea;border-radius:12px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.head{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;font-weight:bold;color:#555;flex-wrap:wrap;gap:4px}
+.balls{display:flex;gap:6px;flex-wrap:wrap}
+.small{font-size:.76rem;color:#777}
+.hit{outline:4px solid #ff1744;outline-offset:1px;animation:glow .8s infinite alternate}
+.bonus-hit{outline:4px dashed #ff9100;outline-offset:1px}
+.dim{opacity:.35}
+@keyframes glow{to{box-shadow:0 0 14px 4px #ff1744}}
+.rank{font-weight:bold;padding:3px 10px;border-radius:12px;background:#eee;color:#555}
+.rank.win{background:#ffd54f;color:#b71c1c;animation:glow .6s infinite alternate}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+td,th{padding:6px;border-bottom:1px solid #eee;text-align:right}
+th:first-child,td:first-child{text-align:left}
+.loss{color:#c62828;font-weight:bold}.gain{color:#2e7d32;font-weight:bold}
+.fall{position:fixed;top:-30px;font-size:1.6rem;pointer-events:none;animation:fall 2.5s linear forwards;z-index:9}
+@keyframes fall{to{transform:translateY(105vh) rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>로또 6/45 번호 생성기 (공동 당첨 회피형)</h1>
+<div class="wrap">
+<h1>🎰 로또 추첨기 놀이터</h1>
+<div class="notice">재미용 도구입니다. 어떤 번호든 1등 확률은 1/8,145,060으로 같습니다. '공동 당첨 위험점수'는 1등이 됐을 때 당첨금을 나눌 가능성을 줄이기 위한 것이지, 당첨 확률을 높이지 않습니다.</div>
 
-<div class="notice">
-⚠️ <b>안내</b>: 로또는 매 회차 독립이며, 어떤 번호 조합이든 1등 확률은 동일하게 <b>1/8,145,060</b>입니다. 이 도구는 당첨 확률을 높이지 않습니다.
-대신 사람들이 많이 고르는 패턴(생일 숫자 1~31, 연번, 등차수열, 용지 한 줄/한 열 몰림)을 피해,
-<b>1등이 됐을 때 당첨금을 다른 사람과 나눌 가능성을 줄이는 것</b>이 목적입니다.
-</div>
-
-<div class="box">
-<div class="title">💾 불러온 회차: <span id="loaded">0회</span> <span id="dbStatus" class="small"></span></div>
-<div class="small">※ 과거 통계는 참고용이며 미래 예측력이 없습니다.</div>
-<div id="stats" class="small" style="margin-top:6px"></div>
-
-<div style="margin-top:10px">
-<span class="small">당첨번호 직접 추가:</span>
-<div class="row">
-<input type="number" id="inR" placeholder="회차" style="width:52px">
-<input type="number" id="in1"><input type="number" id="in2"><input type="number" id="in3">
-<input type="number" id="in4"><input type="number" id="in5"><input type="number" id="in6">
-<input type="number" id="inB" placeholder="보너스" style="border-color:#ff7272">
-<button onclick="addRound()">추가</button>
-</div></div>
-
-<div style="margin-top:10px;font-size:.8rem;display:flex;justify-content:space-between;align-items:center">
-<div><b>엑셀 업로드:</b> <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)"></div>
-<button class="btn-small" onclick="resetData()">서버 데이터 초기화</button>
-</div>
+<div class="panel machine">
+  <canvas id="mc" width="280" height="280"></canvas>
+  <div class="tray" id="tray"><span class="small">추첨 대기 중...</span></div>
+  <div class="btns">
+    <button class="btn b-gen" onclick="generate()">🎲 내 5게임 뽑기</button>
+    <button class="btn b-draw" id="btnDraw" onclick="virtualDraw()">🎰 가상 추첨 돌리기</button>
+  </div>
 </div>
 
-<div class="box">
-<div class="title">🎯 번호 설정</div>
-<div class="modes">
-<label><input type="radio" name="mode" value="auto" checked onchange="toggleMode()"> 전체 1~45 랜덤 (추천)</label>
-<label><input type="radio" name="mode" value="custom" onchange="toggleMode()"> 내 번호 풀 직접 입력</label>
-</div>
-<div id="customBox">
-<textarea id="customText" placeholder="예: 3, 5, 7, 12 ... (중복은 자동 제거)" oninput="parseCustom()"></textarea>
-<div class="small" id="customStatus">입력된 번호: 없음 (최소 6개)</div>
-</div>
-<div style="margin-top:10px">
-<b style="font-size:.82rem;color:#c62828">🚫 제외수 (중복 자동 정리):</b>
-<input type="text" id="excludeInput" class="txt" placeholder="예: 1, 13, 45" oninput="parseExclude()">
-<div class="small" id="excludeStatus">제외된 번호: 없음</div>
-</div>
-<div class="opts">
-<label><input type="checkbox" id="chkAnti" checked> <b>공동 당첨 회피 점수 사용</b></label>
-<label><input type="checkbox" id="chkEvenEnd"> 마지막 번호 짝수 고정</label>
-<label><input type="checkbox" id="chkEvenStart"> 첫 번호 짝수 고정</label>
-<label><input type="checkbox" id="chkConsec" checked> 3연번 이상 금지</label>
-<label><input type="checkbox" id="chkBlockHistory" checked> 역대 1등 번호와 동일 조합 제외</label>
-<label><input type="checkbox" id="chkBalance"> 홀짝 2~4개 / 합계 100~175 (참고용 필터)</label>
-</div>
+<div class="panel">
+  <div class="opts">
+    <label><input type="checkbox" id="chkAnti" checked> 공동 당첨 회피 점수</label>
+    <label><input type="checkbox" id="chkEvenEnd"> 마지막 번호 짝수</label>
+    <label><input type="checkbox" id="chkConsec" checked> 3연번 금지</label>
+    <label>제외수 <input class="txt" id="exc" placeholder="예: 4, 13" style="width:110px"></label>
+  </div>
+  <div id="results"><div class="small" style="text-align:center">‘내 5게임 뽑기’를 눌러보세요!</div></div>
 </div>
 
-<button class="btn-gen" onclick="generate()">5게임 생성</button>
-<div class="results" id="results"></div>
+<div class="panel">
+  <b>📈 장기 시뮬레이션</b> <span class="small">(현재 5게임을 계속 산다면?)</span>
+  <div class="opts" style="margin-top:8px">
+    <select id="weeks" class="txt">
+      <option value="52">1년 (52주)</option>
+      <option value="520" selected>10년 (520주)</option>
+      <option value="5200">100년 (5,200주)</option>
+      <option value="52000">1,000년 (52,000주)</option>
+    </select>
+    <button class="btn b-sim" style="flex:none;min-width:0;padding:8px 16px" onclick="simulate()">시뮬레이션 시작</button>
+  </div>
+  <div id="simOut" class="small">매주 같은 5게임을 사고 추첨은 무작위로 돌려봅니다.</div>
+</div>
 </div>
 
 <script>
-let history=[], userPool=[], userExclude=[];
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cls=n=>n<=10?'c1':n<=20?'c2':n<=30?'c3':n<=40?'c4':'c5';
+const col={c1:'#fbc400',c2:'#69c8f2',c3:'#ff7272',c4:'#999',c5:'#9ccc3a'};
+let history=[], games=[], drawing=false;
 
-function toggleMode(){
-  document.getElementById('customBox').style.display =
-    document.querySelector('input[name="mode"]:checked').value==='custom'?'block':'none';
-}
-function parseList(raw){
-  const s=new Set();
-  raw.replace(/[, \n\t]+/g,' ').trim().split(' ').forEach(t=>{
-    const n=parseInt(t,10); if(n>=1&&n<=45) s.add(n);
-  });
-  return [...s].sort((a,b)=>a-b);
-}
-function parseCustom(){
-  userPool=parseList(document.getElementById('customText').value);
-  document.getElementById('customStatus').innerHTML = userPool.length
-    ? `중복 제거 (${userPool.length}개): <b>${userPool.join(', ')}</b>` : '입력된 번호: 없음 (최소 6개)';
-}
-function parseExclude(){
-  userExclude=parseList(document.getElementById('excludeInput').value);
-  document.getElementById('excludeStatus').innerHTML = userExclude.length
-    ? `제외 중 (${userExclude.length}개): <b style="color:#c62828">${userExclude.join(', ')}</b>` : '제외된 번호: 없음';
-}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-// 정석 셔플 (Fisher-Yates)
-function shuffle(a){
-  a=a.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
+/* ===== 추첨기 애니메이션 ===== */
+const cv=$('mc'),cx=cv.getContext('2d');let mballs=[],boost=1;
+function resetMachine(){
+  mballs=Array.from({length:45},(_,i)=>({n:i+1,x:140+(Math.random()-.5)*160,y:140+(Math.random()-.5)*160,
+    vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3}));
+}
+function loop(){
+  cx.clearRect(0,0,280,280);
+  boost+=(1-boost)*0.03;
+  for(const b of mballs){
+    b.x+=b.vx*boost;b.y+=b.vy*boost;
+    const dx=b.x-140,dy=b.y-140,d=Math.hypot(dx,dy);
+    if(d>122){const nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;
+      b.vx-=2*dot*nx;b.vy-=2*dot*ny;b.x=140+nx*122;b.y=140+ny*122;}
+    cx.beginPath();cx.arc(b.x,b.y,11,0,7);cx.fillStyle=col[cls(b.n)];cx.fill();
+    cx.fillStyle='#fff';cx.font='bold 11px sans-serif';cx.textAlign='center';cx.textBaseline='middle';
+    cx.fillText(b.n,b.x,b.y+1);
   }
-  return a;
+  requestAnimationFrame(loop);
 }
+resetMachine();loop();
 
-// 공동 당첨 위험 점수: 낮을수록 다른 사람과 겹칠 가능성이 낮은 조합
-function sharedRisk(nums){
-  let score=0;
-  const low31=nums.filter(n=>n<=31).length;
-  score += low31*1.0;                       // 생일 숫자 선호
-  if(low31===6) score+=3;                   // 전부 1~31이면 추가 패널티
-  score += nums.filter(n=>n<=12).length*0.5;// 월(1~12)
-  if(nums.includes(7)) score+=1.5;          // 인기 번호 7
-  for(let i=0;i<5;i++) if(nums[i+1]-nums[i]===1) score+=1; // 연번
-  const gaps=new Set(); for(let i=0;i<5;i++) gaps.add(nums[i+1]-nums[i]);
-  if(gaps.size===1) score+=5;               // 등차수열
-  // 용지(7칸 x 7줄) 한 줄/한 열 몰림 (패턴 찍기)
-  const rows=Array(7).fill(0), cols=Array(7).fill(0);
-  nums.forEach(n=>{rows[Math.floor((n-1)/7)]++; cols[(n-1)%7]++;});
-  if(Math.max(...rows)>=3) score+=2;
-  if(Math.max(...cols)>=3) score+=2;
-  if(nums.filter(n=>n>=40).length===0) score+=1; // 40번대 없으면 가산
-  return Math.round(score*10)/10;
+function confetti(emojis){
+  for(let i=0;i<30;i++){
+    const s=document.createElement('span');s.className='fall';
+    s.textContent=emojis[i%emojis.length];s.style.left=Math.random()*100+'vw';
+    s.style.animationDelay=Math.random()*1.2+'s';document.body.appendChild(s);
+    setTimeout(()=>s.remove(),4200);
+  }
 }
 
-function isValid(nums){
-  if(document.getElementById('chkEvenStart').checked && nums[0]%2!==0) return false;
-  if(document.getElementById('chkEvenEnd').checked && nums[5]%2!==0) return false;
-  if(document.getElementById('chkConsec').checked){
-    let cur=1;
-    for(let i=0;i<5;i++){ cur = nums[i+1]===nums[i]+1 ? cur+1 : 1; if(cur>=3) return false; }
-  }
-  if(document.getElementById('chkBalance').checked){
-    const sum=nums.reduce((a,b)=>a+b,0);
-    const odd=nums.filter(n=>n%2).length;
-    if(sum<100||sum>175||odd<2||odd>4) return false;
-  }
-  if(document.getElementById('chkBlockHistory').checked){
-    const key=nums.join(',');
-    if(history.some(r=>r.nums.join(',')===key)) return false;
-  }
+/* ===== 번호 생성 ===== */
+function sharedRisk(n){
+  let s=0;const low=n.filter(x=>x<=31).length;
+  s+=low;if(low===6)s+=3;s+=n.filter(x=>x<=12).length*.5;
+  if(n.includes(7))s+=1.5;
+  for(let i=0;i<5;i++)if(n[i+1]-n[i]===1)s+=1;
+  const g=new Set();for(let i=0;i<5;i++)g.add(n[i+1]-n[i]);if(g.size===1)s+=5;
+  const r=Array(7).fill(0),c=Array(7).fill(0);
+  n.forEach(x=>{r[Math.floor((x-1)/7)]++;c[(x-1)%7]++});
+  if(Math.max(...r)>=3)s+=2;if(Math.max(...c)>=3)s+=2;
+  if(!n.some(x=>x>=40))s+=1;
+  return Math.round(s*10)/10;
+}
+function valid(n){
+  if($('chkEvenEnd').checked&&n[5]%2)return false;
+  if($('chkConsec').checked){let cur=1;for(let i=0;i<5;i++){cur=n[i+1]===n[i]+1?cur+1:1;if(cur>=3)return false}}
+  const k=n.join(',');if(history.some(r=>r.nums.join(',')===k))return false;
   return true;
 }
-
-function randomCombo(pool){
-  return shuffle(pool).slice(0,6).sort((a,b)=>a-b);
-}
-
-function generate(){
-  const mode=document.querySelector('input[name="mode"]:checked').value;
-  const box=document.getElementById('results');
-  box.innerHTML='';
-  let pool = mode==='custom' ? userPool : Array.from({length:45},(_,i)=>i+1);
-  pool = pool.filter(n=>!userExclude.includes(n));
-  if(pool.length<6){ alert('사용 가능한 번호가 6개 이상이어야 합니다.'); return; }
-
-  const useAnti=document.getElementById('chkAnti').checked;
-  const candidates=[]; const seen=new Set();
-  let tries=0;
-  while(candidates.length<(useAnti?400:5) && tries<60000){
-    tries++;
-    const c=randomCombo(pool);
-    const k=c.join(',');
-    if(seen.has(k)||!isValid(c)) continue;
-    seen.add(k); candidates.push(c);
-  }
-  if(candidates.length===0){
-    box.innerHTML='<div class="box" style="color:#d32f2f;text-align:center">조건을 만족하는 조합이 없습니다. 설정을 완화해 보세요.</div>';
-    return;
-  }
-  let picked;
-  if(useAnti){
-    picked=candidates.map(c=>({c,s:sharedRisk(c)})).sort((a,b)=>a.s-b.s).slice(0,5);
-  } else {
-    picked=candidates.slice(0,5).map(c=>({c,s:sharedRisk(c)}));
-  }
-  picked.forEach((p,i)=>box.appendChild(makeCard(p.c,p.s,'ABCDE'[i])));
-  if(picked.length<5){
-    const n=document.createElement('div');
-    n.className='small'; n.style.textAlign='center';
-    n.textContent=`조건이 엄격해 ${picked.length}게임만 생성되었습니다.`;
-    box.appendChild(n);
-  }
-}
-
-function ballClass(n){return n<=10?'b1':n<=20?'b2':n<=30?'b3':n<=40?'b4':'b5';}
-function omrHtml(nums){
-  const set=new Set(nums); let h='';
-  for(let i=1;i<=49;i++) h += i<=45 ? `<div class="cell ${set.has(i)?'m':''}">${i}</div>` : '<div class="cell e"></div>';
-  return `<div class="omr"><div class="grid">${h}</div></div>`;
-}
-function makeCard(c,score,label){
-  const sum=c.reduce((a,b)=>a+b,0), odd=c.filter(n=>n%2).length, low=c.filter(n=>n<=22).length;
-  const el=document.createElement('div'); el.className='card';
-  el.innerHTML=`
-  <div class="head"><span>게임 ${label}</span>
-  <span style="font-weight:normal">공동당첨 위험점수: <b>${score}</b> (낮을수록 유리) | 총합 ${sum}</span></div>
-  <div class="body"><div>
-  <div class="balls">${c.map(n=>`<div class="ball ${ballClass(n)}">${n}</div>`).join('')}</div>
-  <div class="small">홀짝 ${odd}:${6-odd} | 저고 ${low}:${6-low}</div></div>
-  ${omrHtml(c)}</div>`;
-  return el;
-}
-
-// ===== 데이터 (서버 연동) =====
-function refreshStats(){
-  if(!history.length) return;
-  history.sort((a,b)=>b.round-a.round);
-  document.getElementById('loaded').innerText =
-    `${history[history.length-1].round}회 ~ ${history[0].round}회 (총 ${history.length.toLocaleString()}개)`;
-  const cnt={}; history.forEach(r=>r.nums.forEach(n=>cnt[n]=(cnt[n]||0)+1));
-  const top=Object.keys(cnt).map(Number).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3).map(n=>`${n}(${cnt[n]}회)`).join(', ');
-  document.getElementById('stats').innerText=`최다 출현(참고용): ${top}`;
-}
-async function addRound(){
-  const g=id=>parseInt(document.getElementById(id).value);
-  const r=g('inR'), nums=[g('in1'),g('in2'),g('in3'),g('in4'),g('in5'),g('in6')];
-  const b=g('inB')||0;
-  if(!r||nums.some(n=>!(n>=1&&n<=45))||new Set(nums).size!==6){ alert('회차와 서로 다른 6개 번호(1~45)를 입력해주세요.'); return; }
-  nums.sort((a,b)=>a-b);
-  const item={round:r,nums,bonus:b,date:''};
-  try{
-    const res=await fetch('/api/lotto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
-    if(!res.ok){ alert('서버 저장 실패'); return; }
-    history=history.filter(x=>x.round!==r); history.push(item); refreshStats();
-    alert(`${r}회차가 저장되었습니다.`);
-  }catch(e){ alert('서버 통신 오류'); }
-}
-function uploadExcel(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-    const map=new Map();
-    for(const row of rows){
-      if(!row||row.length<8) continue;
-      let round=null, nums=[], bonus=0;
-      for(const v of row){
-        const n=parseInt(v,10); if(isNaN(n)||n<=0) continue;
-        if(round===null) round=n;
-        else if(nums.length<6 && n<=45) nums.push(n);
-        else if(nums.length===6 && !bonus && n<=45) bonus=n;
-      }
-      if(round && nums.length===6 && new Set(nums).size===6)
-        map.set(round,{round,nums:nums.sort((a,b)=>a-b),bonus,date:''});
+async function generate(){
+  if(drawing)return;
+  const ex=new Set(($('exc').value.match(/\d+/g)||[]).map(Number));
+  const pool=Array.from({length:45},(_,i)=>i+1).filter(n=>!ex.has(n));
+  if(pool.length<6){alert('번호가 6개 이상 남아야 합니다.');return}
+  boost=5;
+  const cand=[],seen=new Set();let t=0;
+  const need=$('chkAnti').checked?400:5;
+  while(cand.length<need&&t<50000){t++;
+    const c=shuffle(pool).slice(0,6).sort((a,b)=>a-b),k=c.join(',');
+    if(seen.has(k)||!valid(c))continue;seen.add(k);cand.push(c);}
+  if(!cand.length){alert('조건에 맞는 조합이 없어요. 설정을 완화해보세요.');return}
+  games=cand.map(c=>({c,s:sharedRisk(c)}));
+  if($('chkAnti').checked)games.sort((a,b)=>a.s-b.s);
+  games=games.slice(0,5);
+  const box=$('results');box.innerHTML='';
+  for(let i=0;i<games.length;i++){
+    const g=games[i],el=document.createElement('div');el.className='card';el.id='g'+i;
+    el.innerHTML=`<div class="head"><span>게임 ${'ABCDE'[i]}</span><span id="rk${i}" class="small">위험점수 ${g.s} (낮을수록 유리)</span></div>
+    <div class="balls" id="bl${i}"></div>`;
+    box.appendChild(el);
+    for(const n of g.c){
+      const b=document.createElement('div');b.className=`ball ${cls(n)} pop`;b.dataset.n=n;b.textContent=n;
+      $('bl'+i).appendChild(b);await sleep(150);
     }
-    if(!map.size){ alert('엑셀 형식을 읽을 수 없습니다.'); return; }
-    history=[...map.values()];
-    try{
-      const res=await fetch('/api/lotto/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(history)});
-      alert(res.ok?'저장 완료!':'서버 저장 오류');
-    }catch(err){ alert('서버 통신 오류 (화면에서는 데이터가 반영됩니다)'); }
-    refreshStats();
-  };
-  reader.readAsArrayBuffer(file);
+  }
 }
-async function resetData(){
-  if(!confirm('서버에 저장된 데이터를 모두 삭제할까요?')) return;
-  try{
-    const res=await fetch('/api/lotto',{method:'DELETE'});
-    if(res.ok){ history=[]; document.getElementById('loaded').innerText='0회'; document.getElementById('stats').innerText=''; alert('초기화 완료'); }
-    else alert('서버가 DELETE /api/lotto 를 지원하지 않습니다. 서버 코드를 추가해야 합니다.');
-  }catch(e){ alert('서버 통신 오류'); }
+
+/* ===== 가상 추첨 ===== */
+const rankName={1:'🥇 1등!',2:'🥈 2등!',3:'🥉 3등!',4:'🎉 4등',5:'🙂 5등',0:'낙첨'};
+function rankOf(m,bonus){return m===6?1:m===5&&bonus?2:m===5?3:m===4?4:m===3?5:0}
+async function virtualDraw(){
+  if(drawing)return;
+  if(!games.length){alert('먼저 ‘내 5게임 뽑기’를 눌러주세요.');return}
+  drawing=true;$('btnDraw').disabled=true;
+  resetMachine();
+  const tray=$('tray');tray.innerHTML='';
+  document.querySelectorAll('.ball').forEach(b=>b.classList.remove('hit','bonus-hit','dim'));
+  games.forEach((_,i)=>{const r=$('rk'+i);r.className='small';r.textContent='추첨 중...'});
+  const drawn=[];let bonus=0;
+  for(let k=0;k<7;k++){
+    boost=6;await sleep(1100);
+    const idx=Math.floor(Math.random()*mballs.length),b=mballs.splice(idx,1)[0];
+    if(k===6){const p=document.createElement('span');p.className='plus';p.textContent='+';tray.appendChild(p);bonus=b.n}
+    else drawn.push(b.n);
+    const el=document.createElement('div');el.className=`ball ${cls(b.n)} pop`;el.textContent=b.n;tray.appendChild(el);
+    games.forEach((g,i)=>{
+      const ball=document.querySelector(`#bl${i} .ball[data-n="${b.n}"]`);
+      if(ball)ball.classList.add(k===6?'bonus-hit':'hit');
+    });
+    if(k===5)await sleep(500);
+  }
+  let best=99;
+  games.forEach((g,i)=>{
+    const m=g.c.filter(n=>drawn.includes(n)).length,bh=g.c.includes(bonus);
+    const rk=rankOf(m,bh);if(rk&&rk<best)best=rk;
+    const r=$('rk'+i);r.className='rank'+(rk?' win':'');
+    r.textContent=`${m}개 일치 → ${rankName[rk]}`;
+    document.querySelectorAll(`#bl${i} .ball`).forEach(b=>{
+      const n=+b.dataset.n;if(!drawn.includes(n)&&!(n===bonus))b.classList.add('dim');
+    });
+  });
+  if(best<=3)confetti(['🎊','🎉','💰','✨']);
+  else if(best<=5)confetti(['🙂','✨']);
+  drawing=false;$('btnDraw').disabled=false;
 }
-(async function init(){
-  const st=document.getElementById('dbStatus');
-  try{
-    const res=await fetch('/api/lotto'); const data=await res.json();
-    if(data&&data.length){ history=data; st.innerText='(서버 DB 연동됨)'; st.style.color='#2e7d32'; }
-  }catch(e){ st.innerText='(서버 연결 실패 - 로컬 모드)'; st.style.color='#c62828'; }
-  refreshStats();
-})();
+
+/* ===== 장기 시뮬레이션 ===== */
+const prize={1:2e9,2:5e7,3:1.5e6,4:5e4,5:5e3};
+function countUp(el,to,fmt){
+  const t0=performance.now();
+  (function f(t){const p=Math.min(1,(t-t0)/1200);el.textContent=fmt(Math.round(to*p));if(p<1)requestAnimationFrame(f)})(t0);
+}
+function simulate(){
+  if(!games.length){alert('먼저 ‘내 5게임 뽑기’를 눌러주세요.');return}
+  const weeks=+$('weeks').value,cnt={0:0,1:0,2:0,3:0,4:0,5:0},nums=Array.from({length:45},(_,i)=>i+1);
+  const sets=games.map(g=>new Set(g.c));
+  for(let w=0;w<weeks;w++){
+    for(let i=44;i>38;i--){const j=Math.floor(Math.random()*(i+1));[nums[i],nums[j]]=[nums[j],nums[i]]}
+    const j2=Math.floor(Math.random()*39);[nums[38],nums[j2]]=[nums[j2],nums[38]];
+    const win=new Set(nums.slice(39)),bonus=nums[38];
+    for(const s of sets){let m=0;for(const n of win)if(s.has(n))m++;cnt[rankOf(m,s.has(bonus))]++}
+  }
+  const spent=weeks*5*5000;let won=0;for(let r=1;r<=5;r++)won+=cnt[r]*prize[r];
+  const f=n=>n.toLocaleString()+'원';
+  $('simOut').innerHTML=`<div>${weeks.toLocaleString()}주 동안 ${(weeks*5).toLocaleString()}게임 구매</div>
+  <table><tr><th>등수</th><th>횟수</th></tr>
+  ${[1,2,3,4,5].map(r=>`<tr><td>${rankName[r]}</td><td>${cnt[r].toLocaleString()}회</td></tr>`).join('')}
+  <tr><td>낙첨</td><td>${cnt[0].toLocaleString()}회</td></tr></table>
+  <table><tr><td>총 구매금액</td><td id="sp">0</td></tr>
+  <tr><td>총 당첨금(추정)</td><td id="wn">0</td></tr>
+  <tr><td><b>손익</b></td><td id="pl"></td></tr></table>
+  <div class="small" style="margin-top:6px">※ 당첨금은 1등 20억·2등 5천만·3등 150만·4등 5만·5등 5천원으로 가정한 값입니다. 실제 금액은 회차마다 다릅니다.</div>`;
+  countUp($('sp'),spent,f);countUp($('wn'),won,f);
+  const pl=won-spent,e=$('pl');e.className=pl>=0?'gain':'loss';
+  countUp(e,Math.abs(pl),n=>(pl>=0?'+':'-')+f(n));
+  if(cnt[1]>0)confetti(['💰','🎊']);
+}
+
+/* ===== 서버 데이터(선택) ===== */
+(async()=>{try{const r=await fetch('/api/lotto');const d=await r.json();if(Array.isArray(d))history=d}catch(e){}})();
 </script>
 </body>
 </html>
