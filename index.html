@@ -125,14 +125,13 @@ function confetti(emojis){
 /* ===== 번호 생성 ===== */
 function sharedRisk(n){
   let s=0;const low=n.filter(x=>x<=31).length;
-  s+=low;if(low===6)s+=3;s+=n.filter(x=>x<=12).length*.5;
-  if(n.includes(7))s+=1.5;
+  if(low===6)s+=3;else if(low===5)s+=1;
   for(let i=0;i<5;i++)if(n[i+1]-n[i]===1)s+=1;
   const g=new Set();for(let i=0;i<5;i++)g.add(n[i+1]-n[i]);if(g.size===1)s+=5;
   const r=Array(7).fill(0),c=Array(7).fill(0);
   n.forEach(x=>{r[Math.floor((x-1)/7)]++;c[(x-1)%7]++});
   if(Math.max(...r)>=3)s+=2;if(Math.max(...c)>=3)s+=2;
-  if(!n.some(x=>x>=40))s+=1;
+  if(!n.some(x=>x>=40))s+=.5;
   return Math.round(s*10)/10;
 }
 function valid(n){
@@ -154,7 +153,7 @@ async function generate(){
     if(seen.has(k)||!valid(c))continue;seen.add(k);cand.push(c);}
   if(!cand.length){alert('조건에 맞는 조합이 없어요. 설정을 완화해보세요.');return}
   games=cand.map(c=>({c,s:sharedRisk(c)}));
-  if($('chkAnti').checked)games.sort((a,b)=>a.s-b.s);
+  if($('chkAnti').checked){games.sort((a,b)=>a.s-b.s);games=shuffle(games.slice(0,Math.max(5,Math.ceil(games.length*0.3))));}
   games=games.slice(0,5);
   const box=$('results');box.innerHTML='';
   for(let i=0;i<games.length;i++){
