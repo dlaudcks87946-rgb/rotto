@@ -1,999 +1,305 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로또 6/45 미래 예측 시뮬레이터 & 프로페셔널 조합기</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f1f3f5;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 780px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        h1 {
-            font-size: 1.35rem;
-            color: #212529;
-            margin: 0 0 15px 0;
-            text-align: center;
-        }
-        .section-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 15px;
-            font-size: 0.88rem;
-        }
-        .section-title {
-            font-weight: bold;
-            color: #495057;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .filter-badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 8px 0;
-        }
-        .filter-badge {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.78rem;
-            font-weight: bold;
-        }
-        .filter-badge.omr {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .filter-badge.future {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        .range-select-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 10px 0;
-            font-size: 0.88rem;
-            font-weight: bold;
-            color: #333;
-        }
-        .range-select-row select {
-            padding: 5px 8px;
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-            font-weight: bold;
-        }
-        .input-row {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .input-row input {
-            width: 42px;
-            padding: 6px 0;
-            text-align: center;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-        .input-row button {
-            flex: 1;
-            padding: 6px 12px;
-            background: #495057;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .input-row button:hover { background: #343a40; }
-        .mode-select {
-            display: flex;
-            gap: 12px;
-            margin: 10px 0;
-            padding: 10px;
-            background: #fff;
-            border-radius: 6px;
-            border: 1px solid #e9ecef;
-        }
-        .mode-select label {
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .custom-input-box {
-            display: none;
-            margin-top: 10px;
-            background: #fff;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-        }
-        .custom-input-box textarea, .exclude-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.88rem;
-            font-family: inherit;
-        }
-        .custom-input-box textarea { height: 50px; resize: vertical; }
-        .pool-status {
-            font-size: 0.8rem;
-            color: #495057;
-            margin-top: 6px;
-            word-break: break-all;
-        }
-        .advanced-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #dee2e6;
-            font-size: 0.82rem;
-            color: #495057;
-        }
-        .stats-summary {
-            display: flex;
-            justify-content: space-around;
-            background: #e9ecef;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: bold;
-            color: #495057;
-            margin-top: 10px;
-        }
-        .btn-generate {
-            width: 100%;
-            padding: 14px;
-            font-size: 1.05rem;
-            font-weight: bold;
-            color: #ffffff;
-            background: #d32f2f;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .btn-generate:hover { background: #b71c1c; }
-        .btn-winning-omr {
-            width: 100%;
-            padding: 10px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: #ffffff;
-            background: #2e7d32;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .btn-winning-omr:hover { background: #1b5e20; }
-
-        .result-area {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .combo-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px 14px;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .combo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.82rem;
-            font-weight: bold;
-            color: #666;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .combo-body {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        .combo-left {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .balls {
-            display: flex;
-            gap: 5px;
-        }
-        .ball {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.88rem;
-            color: #ffffff;
-        }
-        .ball-1 { background-color: #fbc400; }
-        .ball-2 { background-color: #69c8f2; }
-        .ball-3 { background-color: #ff7272; }
-        .ball-4 { background-color: #aaa; }
-        .ball-5 { background-color: #b0d840; }
-        .stats-text {
-            font-size: 0.78rem;
-            color: #777;
-        }
-        
-        .future-sim-card {
-            background: #fff8e1;
-            border: 1px solid #ffe082;
-            border-radius: 8px;
-            padding: 12px 14px;
-            font-size: 0.82rem;
-            color: #5d4037;
-            margin-bottom: 15px;
-        }
-        .future-sim-title {
-            font-weight: bold;
-            color: #f57f17;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .storage-status {
-            font-size: 0.78rem;
-            color: #2e7d32;
-            font-weight: normal;
-        }
-        .btn-reset {
-            padding: 3px 8px;
-            font-size: 0.75rem;
-            background: #e0e0e0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
--webkit-border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .omr-preview-box {
-            background: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 5px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .omr-title {
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 3px;
-        }
-        .omr-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 13px);
-            gap: 2px;
-        }
-        .omr-cell {
-            width: 13px;
-            height: 9px;
-            font-size: 6.5px;
-            border-radius: 1px;
-            background: #eef0f2;
-            color: #aaa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-        .omr-cell.marked {
-            background: #d32f2f;
-            color: #fff;
-            font-weight: bold;
-            box-shadow: 0 0 2px rgba(211, 47, 47, 0.8);
-        }
-        .omr-cell.empty {
-            visibility: hidden;
-        }
-
-        /* 당첨 번호 OMR 모달/영역 스타일 */
-        .winning-omr-container {
-            margin-top: 15px;
-            background: #f1f8e9;
-            border: 1px solid #c8e6c9;
-            border-radius: 8px;
-            padding: 15px;
-            display: none;
-        }
-        .winning-omr-header {
-            font-weight: bold;
-            color: #2e7d32;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또 6/45 번호 생성기 (공동 당첨 회피형)</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+body{font-family:'Pretendard',-apple-system,'Segoe UI',Roboto,sans-serif;background:#f1f3f5;margin:0;padding:20px;display:flex;justify-content:center}
+.container{width:100%;max-width:780px;background:#fff;border-radius:12px;padding:25px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+h1{font-size:1.3rem;text-align:center;margin:0 0 15px}
+.box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;margin-bottom:15px;font-size:.88rem}
+.notice{background:#fff8e1;border:1px solid #ffe082;color:#5d4037;border-radius:8px;padding:12px 14px;font-size:.82rem;margin-bottom:15px;line-height:1.5}
+.title{font-weight:bold;color:#495057;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:.82rem;color:#495057}
+.row{display:flex;gap:6px;margin-top:8px}
+.row input{width:42px;padding:6px 0;text-align:center;border:1px solid #ced4da;border-radius:4px;font-weight:bold}
+.row button,.btn-small{padding:6px 12px;background:#495057;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:bold}
+textarea,.txt{width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px;box-sizing:border-box;font-family:inherit}
+textarea{height:50px}
+.modes{display:flex;gap:12px;margin:10px 0}
+#customBox{display:none;margin-top:8px}
+.small{font-size:.78rem;color:#777;margin-top:4px}
+.btn-gen{width:100%;padding:14px;font-size:1.05rem;font-weight:bold;color:#fff;background:#d32f2f;border:none;border-radius:8px;cursor:pointer}
+.btn-gen:hover{background:#b71c1c}
+.results{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid #e0e0e0;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.head{display:flex;justify-content:space-between;font-size:.82rem;font-weight:bold;color:#666;flex-wrap:wrap;gap:6px}
+.body{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.balls{display:flex;gap:5px}
+.ball{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.88rem;color:#fff}
+.b1{background:#fbc400}.b2{background:#69c8f2}.b3{background:#ff7272}.b4{background:#aaa}.b5{background:#b0d840}
+.omr{background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:5px 6px}
+.grid{display:grid;grid-template-columns:repeat(7,13px);gap:2px}
+.cell{width:13px;height:9px;font-size:6.5px;border-radius:1px;background:#eef0f2;color:#aaa;display:flex;align-items:center;justify-content:center}
+.cell.m{background:#d32f2f;color:#fff;font-weight:bold}
+.cell.e{visibility:hidden}
+</style>
 </head>
 <body>
-
 <div class="container">
-    <h1>로또 6/45 미래 예측 시뮬레이터 & 프로페셔널 조합기</h1>
+<h1>로또 6/45 번호 생성기 (공동 당첨 회피형)</h1>
 
-    <div class="future-sim-card">
-        <div class="future-sim-title">
-            <span>🔮 [실시간 미래 확률 최적화 리포트]</span>
-        </div>
-        <div id="futureReportText">
-            데이터를 불러오는 중입니다... 모멘텀 가중치 및 회전율 계산 대기 중.
-        </div>
-    </div>
+<div class="notice">
+⚠️ <b>안내</b>: 로또는 매 회차 독립이며, 어떤 번호 조합이든 1등 확률은 동일하게 <b>1/8,145,060</b>입니다. 이 도구는 당첨 확률을 높이지 않습니다.
+대신 사람들이 많이 고르는 패턴(생일 숫자 1~31, 연번, 등차수열, 용지 한 줄/한 열 몰림)을 피해,
+<b>1등이 됐을 때 당첨금을 다른 사람과 나눌 가능성을 줄이는 것</b>이 목적입니다.
+</div>
 
-    <div class="section-box">
-        <div class="section-title">
-            <span>💾 불러온 전체 회차: <span id="totalLoadedCount">0회</span> <span id="dbStatus" class="storage-status">(Postgres DB 영구 연동됨)</span></span>
-            <span style="color:#d32f2f;" id="lastBonusTag">직전 보너스: -</span>
-        </div>
+<div class="box">
+<div class="title">💾 불러온 회차: <span id="loaded">0회</span> <span id="dbStatus" class="small"></span></div>
+<div class="small">※ 과거 통계는 참고용이며 미래 예측력이 없습니다.</div>
+<div id="stats" class="small" style="margin-top:6px"></div>
 
-        <div class="range-select-row">
-            <label for="windowSelect">분석 대상 범위:</label>
-            <select id="windowSelect" onchange="recalculateStats()">
-                <option value="20" selected>최근 20회차 (단기 모멘텀)</option>
-                <option value="50">최근 50회차 (중기 트렌드)</option>
-                <option value="100">최근 100회차 (안정형)</option>
-                <option value="all">불러온 전체 회차 (거시적 통계)</option>
-            </select>
-            <span id="currentRangeText" style="font-size:0.8rem; color:#666; font-weight:normal;"></span>
-        </div>
+<div style="margin-top:10px">
+<span class="small">당첨번호 직접 추가:</span>
+<div class="row">
+<input type="number" id="inR" placeholder="회차" style="width:52px">
+<input type="number" id="in1"><input type="number" id="in2"><input type="number" id="in3">
+<input type="number" id="in4"><input type="number" id="in5"><input type="number" id="in6">
+<input type="number" id="inB" placeholder="보너스" style="border-color:#ff7272">
+<button onclick="addRound()">추가</button>
+</div></div>
 
-        <div class="filter-badge-list">
-            <span class="filter-badge">총합 110 ~ 160</span>
-            <span class="filter-badge">홀짝 비율 최적화</span>
-            <span class="filter-badge">저고 비율 최적화</span>
-            <span class="filter-badge">동끝수 필수</span>
-            <span class="filter-badge">40번대 마감</span>
-            <span class="filter-badge">이월수 0~2개</span>
-            <span class="filter-badge omr">OMR 공간 균형</span>
-            <span class="filter-badge future">미래 회전율 & 가중치 모델</span>
-        </div>
+<div style="margin-top:10px;font-size:.8rem;display:flex;justify-content:space-between;align-items:center">
+<div><b>엑셀 업로드:</b> <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)"></div>
+<button class="btn-small" onclick="resetData()">서버 데이터 초기화</button>
+</div>
+</div>
 
-        <div>
-            <span style="font-size:0.8rem; color:#666;">다음 회차 당첨번호 직접 추가:</span>
-            <div class="input-row">
-                <input type="number" id="inR" placeholder="회차" style="width:52px;">
-                <input type="number" id="in1" placeholder="1">
-                <input type="number" id="in2" placeholder="2">
-                <input type="number" id="in3" placeholder="3">
-                <input type="number" id="in4" placeholder="4">
-                <input type="number" id="in5" placeholder="5">
-                <input type="number" id="in6" placeholder="6">
-                <input type="number" id="inB" placeholder="보너스" style="border-color:#ff7272;">
-                <button onclick="addNewRoundManual()">추가</button>
-            </div>
-        </div>
+<div class="box">
+<div class="title">🎯 번호 설정</div>
+<div class="modes">
+<label><input type="radio" name="mode" value="auto" checked onchange="toggleMode()"> 전체 1~45 랜덤 (추천)</label>
+<label><input type="radio" name="mode" value="custom" onchange="toggleMode()"> 내 번호 풀 직접 입력</label>
+</div>
+<div id="customBox">
+<textarea id="customText" placeholder="예: 3, 5, 7, 12 ... (중복은 자동 제거)" oninput="parseCustom()"></textarea>
+<div class="small" id="customStatus">입력된 번호: 없음 (최소 6개)</div>
+</div>
+<div style="margin-top:10px">
+<b style="font-size:.82rem;color:#c62828">🚫 제외수 (중복 자동 정리):</b>
+<input type="text" id="excludeInput" class="txt" placeholder="예: 1, 13, 45" oninput="parseExclude()">
+<div class="small" id="excludeStatus">제외된 번호: 없음</div>
+</div>
+<div class="opts">
+<label><input type="checkbox" id="chkAnti" checked> <b>공동 당첨 회피 점수 사용</b></label>
+<label><input type="checkbox" id="chkEvenEnd"> 마지막 번호 짝수 고정</label>
+<label><input type="checkbox" id="chkEvenStart"> 첫 번호 짝수 고정</label>
+<label><input type="checkbox" id="chkConsec" checked> 3연번 이상 금지</label>
+<label><input type="checkbox" id="chkBlockHistory" checked> 역대 1등 번호와 동일 조합 제외</label>
+<label><input type="checkbox" id="chkBalance"> 홀짝 2~4개 / 합계 100~175 (참고용 필터)</label>
+</div>
+</div>
 
-        <div style="margin-top: 10px; font-size: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <span><b>전체 회차 엑셀 업로드:</b> </span>
-                <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="uploadExcel(this)">
-            </div>
-            <button class="btn-reset" onclick="resetStoredData()">서버 데이터 초기화</button>
-        </div>
-
-        <div class="stats-summary" id="statsSummary">
-            <span>평균 총합: -</span>
-            <span>최빈수: -</span>
-            <span>최다 궁합수: -</span>
-        </div>
-    </div>
-
-    <!-- 🟢 직전 당첨 번호 OMR 마킹 분포 확인 버튼 및 영역 -->
-    <button class="btn-winning-omr" onclick="toggleWinningOmrView()">📊 직전 회차(최신) 당첨 번호 OMR 마킹 분포 보기</button>
-    <div class="winning-omr-container" id="winningOmrContainer">
-        <div class="winning-omr-header">
-            <span id="winningOmrTitle">최신 회차 당첨 번호 OMR 분포</span>
-            <button class="btn-reset" onclick="toggleWinningOmrView()">닫기 X</button>
-        </div>
-        <div id="winningOmrContent" style="display:flex; justify-content:center;"></div>
-    </div>
-
-    <div class="section-box" style="margin-top:15px;">
-        <div class="section-title">
-            <span>🎯 미래 예측 가중치 모드 및 전략 옵션</span>
-        </div>
-        
-        <div class="mode-select">
-            <label>
-                <input type="radio" name="poolMode" value="auto" checked onchange="toggleMode()"> 
-                미래 모멘텀 & 회전율 가중치 자동 추출 (추천)
-            </label>
-            <label>
-                <input type="radio" name="poolMode" value="custom" onchange="toggleMode()"> 
-                내 번호 풀 직접 입력 (중복 자동 제거)
-            </label>
-        </div>
-
-        <div class="custom-input-box" id="customInputBox">
-            <span style="font-size:0.82rem; font-weight:bold; color:#333;">후보 번호 목록 입력 (띄어쓰기, 쉼표, 중복 입력 가능):</span>
-            <textarea id="customTextInput" placeholder="예: 3, 3, 5, 7, 7, 12 (중복된 숫자는 자동으로 하나만 남습니다)" oninput="parseCustomNumbers()"></textarea>
-            <div class="pool-status" id="customPoolStatus">중복 제거된 번호: 없음 (최소 6개 이상 필요)</div>
-        </div>
-
-        <div style="margin-top: 10px;">
-            <span style="font-size:0.82rem; font-weight:bold; color:#c62828;">🚫 완전 제외수 지정 (중복 입력 자동 정리):</span>
-            <input type="text" id="excludeInput" class="exclude-input" style="margin-top:4px;" placeholder="예: 1, 1, 13, 45 (중복 번호는 알아서 정리됩니다)" oninput="parseExcludeNumbers()">
-            <div id="excludeStatus" style="font-size:0.78rem; color:#888; margin-top:3px;">제외된 번호: 없음</div>
-        </div>
-
-        <div class="advanced-options">
-            <label><input type="checkbox" id="chkEvenStart"> 첫 번호 짝수 고정</label>
-            <label><input type="checkbox" id="chkEvenEnd"> <b>마지막 번호 짝수 고정</b></label>
-            <label><input type="checkbox" id="chkClose40" checked> 40번대 마감</label>
-            <label><input type="checkbox" id="chkOmrGridBalance" checked> OMR 공간 균형 필터</label>
-            <label><input type="checkbox" id="chkCarryOverLimit" checked> 직전 이월수 0~2개 제한</label>
-            <label><input type="checkbox" id="chkBlockHistoryFirst" checked> 역대 1등 기출 조합 탈락</label>
-            <label><input type="checkbox" id="chkApplyPairWeight" checked> 미래 궁합 가중치 우선 배정</label>
-            <label><input type="checkbox" id="chkConsecutiveBlock" checked> 3연번 이상 금지</label>
-            <label><input type="checkbox" id="chkSectionBalance" checked> 구간 몰림 방지 (최대 3개)</label>
-            <label><input type="checkbox" id="chkAcValue" checked> AC값 7 이상</label>
-        </div>
-    </div>
-
-    <button class="btn-generate" onclick="generateCombinations()">미래 최적화 확률 통과 5게임 생성</button>
-
-    <div class="result-area" id="results"></div>
+<button class="btn-gen" onclick="generate()">5게임 생성</button>
+<div class="results" id="results"></div>
 </div>
 
 <script>
-let allHistoryData = [];
-let weightedPool = [];
-let latestBonus = 8;
-let latestMainNums = [];
-let userCustomPool = [];
-let userExcludeNums = [];
-let topPairs = [];
+let history=[], userPool=[], userExclude=[];
 
-function toggleMode() {
-    const isCustom = document.querySelector('input[name="poolMode"]:checked').value === 'custom';
-    document.getElementById('customInputBox').style.display = isCustom ? 'block' : 'none';
+function toggleMode(){
+  document.getElementById('customBox').style.display =
+    document.querySelector('input[name="mode"]:checked').value==='custom'?'block':'none';
+}
+function parseList(raw){
+  const s=new Set();
+  raw.replace(/[, \n\t]+/g,' ').trim().split(' ').forEach(t=>{
+    const n=parseInt(t,10); if(n>=1&&n<=45) s.add(n);
+  });
+  return [...s].sort((a,b)=>a-b);
+}
+function parseCustom(){
+  userPool=parseList(document.getElementById('customText').value);
+  document.getElementById('customStatus').innerHTML = userPool.length
+    ? `중복 제거 (${userPool.length}개): <b>${userPool.join(', ')}</b>` : '입력된 번호: 없음 (최소 6개)';
+}
+function parseExclude(){
+  userExclude=parseList(document.getElementById('excludeInput').value);
+  document.getElementById('excludeStatus').innerHTML = userExclude.length
+    ? `제외 중 (${userExclude.length}개): <b style="color:#c62828">${userExclude.join(', ')}</b>` : '제외된 번호: 없음';
 }
 
-function parseCustomNumbers() {
-    const raw = document.getElementById('customTextInput').value;
-    const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
-    const numSet = new Set();
-    
-    for (let t of tokens) {
-        let n = parseInt(t, 10);
-        if (!isNaN(n) && n >= 1 && n <= 45) {
-            numSet.add(n);
-        }
-    }
-    
-    userCustomPool = Array.from(numSet).sort((a, b) => a - b);
-    const status = document.getElementById('customPoolStatus');
-    status.innerHTML = userCustomPool.length > 0 ? 
-        `중복 제거된 번호 (${userCustomPool.length}개): <b style="color:#1976d2;">${userCustomPool.join(', ')}</b>` : 
-        '입력된 번호: 없음';
+// 정석 셔플 (Fisher-Yates)
+function shuffle(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
 
-function parseExcludeNumbers() {
-    const raw = document.getElementById('excludeInput').value;
-    const tokens = raw.replace(/[, \n\t]+/g, ' ').trim().split(' ');
-    const numSet = new Set();
-    
-    for (let t of tokens) {
-        let n = parseInt(t, 10);
-        if (!isNaN(n) && n >= 1 && n <= 45) {
-            numSet.add(n);
-        }
-    }
-    
-    userExcludeNums = Array.from(numSet).sort((a, b) => a - b);
-    document.getElementById('excludeStatus').innerHTML = userExcludeNums.length > 0 ? 
-        `제외 적용 중 (${userExcludeNums.length}개): <b style="color:#c62828;">${userExcludeNums.join(', ')}</b>` : 
-        '제외된 번호: 없음';
+// 공동 당첨 위험 점수: 낮을수록 다른 사람과 겹칠 가능성이 낮은 조합
+function sharedRisk(nums){
+  let score=0;
+  const low31=nums.filter(n=>n<=31).length;
+  score += low31*1.0;                       // 생일 숫자 선호
+  if(low31===6) score+=3;                   // 전부 1~31이면 추가 패널티
+  score += nums.filter(n=>n<=12).length*0.5;// 월(1~12)
+  if(nums.includes(7)) score+=1.5;          // 인기 번호 7
+  for(let i=0;i<5;i++) if(nums[i+1]-nums[i]===1) score+=1; // 연번
+  const gaps=new Set(); for(let i=0;i<5;i++) gaps.add(nums[i+1]-nums[i]);
+  if(gaps.size===1) score+=5;               // 등차수열
+  // 용지(7칸 x 7줄) 한 줄/한 열 몰림 (패턴 찍기)
+  const rows=Array(7).fill(0), cols=Array(7).fill(0);
+  nums.forEach(n=>{rows[Math.floor((n-1)/7)]++; cols[(n-1)%7]++;});
+  if(Math.max(...rows)>=3) score+=2;
+  if(Math.max(...cols)>=3) score+=2;
+  if(nums.filter(n=>n>=40).length===0) score+=1; // 40번대 없으면 가산
+  return Math.round(score*10)/10;
 }
 
-function calculatePairs(dataList) {
-    let pairCounts = {};
-    for (let r of dataList) {
-        let nums = r.nums;
-        for (let i = 0; i < nums.length; i++) {
-            for (let j = i + 1; j < nums.length; j++) {
-                let key = `${nums[i]}-${nums[j]}`;
-                pairCounts[key] = (pairCounts[key] || 0) + 1;
-            }
-        }
-    }
-    let sorted = Object.keys(pairCounts).map(k => {
-        let parts = k.split('-').map(Number);
-        return { n1: parts[0], n2: parts[1], count: pairCounts[k] };
-    }).sort((a, b) => b.count - a.count);
-    return sorted;
+function isValid(nums){
+  if(document.getElementById('chkEvenStart').checked && nums[0]%2!==0) return false;
+  if(document.getElementById('chkEvenEnd').checked && nums[5]%2!==0) return false;
+  if(document.getElementById('chkConsec').checked){
+    let cur=1;
+    for(let i=0;i<5;i++){ cur = nums[i+1]===nums[i]+1 ? cur+1 : 1; if(cur>=3) return false; }
+  }
+  if(document.getElementById('chkBalance').checked){
+    const sum=nums.reduce((a,b)=>a+b,0);
+    const odd=nums.filter(n=>n%2).length;
+    if(sum<100||sum>175||odd<2||odd>4) return false;
+  }
+  if(document.getElementById('chkBlockHistory').checked){
+    const key=nums.join(',');
+    if(history.some(r=>r.nums.join(',')===key)) return false;
+  }
+  return true;
 }
 
-function runFutureSimulation(targetSlice) {
-    let appearanceCount = {};
-    let recencyWeight = {};
-
-    for (let i = 1; i <= 45; i++) {
-        appearanceCount[i] = 0;
-        recencyWeight[i] = 0;
-    }
-
-    targetSlice.forEach((r, idx) => {
-        let weight = Math.max(1, 3.0 - (idx / targetSlice.length) * 2);
-        r.nums.forEach(n => {
-            appearanceCount[n] = (appearanceCount[n] || 0) + 1;
-            recencyWeight[n] += weight;
-        });
-    });
-
-    let numberScores = [];
-    for (let i = 1; i <= 45; i++) {
-        let baseFreq = appearanceCount[i] || 0;
-        let momentum = recencyWeight[i] || 0;
-        let futureScore = (baseFreq * 0.4) + (momentum * 0.6);
-        numberScores.push({ num: i, score: futureScore });
-    }
-
-    numberScores.sort((a, b) => b.score - a.score);
-    weightedPool = numberScores.map(item => item.num);
-
-    let topHot = numberScores.slice(0, 5).map(x => `<b>${x.num}번</b>`).join(', ');
-    let topCold = numberScores.slice(-5).map(x => `<b>${x.num}번</b>`).join(', ');
-    
-    document.getElementById('futureReportText').innerHTML = `
-        • <b>미래 모멘텀 상위 추천 주도주</b>: ${topHot}<br>
-        • <b>주기 회전 대기 중인 저평가 번호</b>: ${topCold}<br>
-        • <i>Tip: 이 기능을 활용할 때 '상위 궁합수 우선 배정'과 'OMR 공간 균형 필터'를 함께 켜두시면 비효율적인 분산 투자가 차단되어 당첨 효율(확률 배수)이 극대화됩니다.</i>
-    `;
+function randomCombo(pool){
+  return shuffle(pool).slice(0,6).sort((a,b)=>a-b);
 }
 
-function recalculateStats() {
-    if (allHistoryData.length === 0) return;
+function generate(){
+  const mode=document.querySelector('input[name="mode"]:checked').value;
+  const box=document.getElementById('results');
+  box.innerHTML='';
+  let pool = mode==='custom' ? userPool : Array.from({length:45},(_,i)=>i+1);
+  pool = pool.filter(n=>!userExclude.includes(n));
+  if(pool.length<6){ alert('사용 가능한 번호가 6개 이상이어야 합니다.'); return; }
 
-    allHistoryData.sort((a, b) => b.round - a.round);
-
-    const windowChoice = document.getElementById('windowSelect').value;
-    let targetSlice = allHistoryData;
-    if (windowChoice !== 'all') {
-        const count = parseInt(windowChoice, 10);
-        targetSlice = allHistoryData.slice(0, count);
-    }
-
-    const totalCount = allHistoryData.length;
-    document.getElementById('totalLoadedCount').innerText = `${allHistoryData[totalCount - 1].round}회 ~ ${allHistoryData[0].round}회 (총 ${totalCount.toLocaleString()}개 회차)`;
-
-    const sliceCount = targetSlice.length;
-    document.getElementById('currentRangeText').innerText = `[${targetSlice[sliceCount - 1].round}회 ~ ${targetSlice[0].round}회 분석 중]`;
-
-    latestBonus = allHistoryData[0].bonus;
-    latestMainNums = allHistoryData[0].nums;
-    document.getElementById('lastBonusTag').innerText = `직전 보너스: ${latestBonus}번 (이월 후보)`;
-
-    let counts = {};
-    let totalSum = 0;
-    for (let r of targetSlice) {
-        totalSum += r.nums.reduce((a, b) => a + b, 0);
-        for (let n of r.nums) counts[n] = (counts[n] || 0) + 1;
-    }
-
-    let avgSum = Math.round(totalSum / sliceCount);
-    let sortedNums = Object.keys(counts).map(Number).sort((a, b) => counts[b] - counts[a]);
-    
-    topPairs = calculatePairs(targetSlice);
-    let topPairStr = topPairs.length > 0 ? `${topPairs[0].n1}&${topPairs[0].n2}(${topPairs[0].count}회)` : '-';
-
-    document.getElementById('statsSummary').innerHTML = `
-        <span>평균 총합: ${avgSum}</span>
-        <span>최빈수: ${sortedNums.slice(0, 3).map(n => `${n}(${counts[n]}회)`).join(', ')}</span>
-        <span>최고 궁합: ${topPairStr}</span>
-    `;
-
-    runFutureSimulation(targetSlice);
+  const useAnti=document.getElementById('chkAnti').checked;
+  const candidates=[]; const seen=new Set();
+  let tries=0;
+  while(candidates.length<(useAnti?400:5) && tries<60000){
+    tries++;
+    const c=randomCombo(pool);
+    const k=c.join(',');
+    if(seen.has(k)||!isValid(c)) continue;
+    seen.add(k); candidates.push(c);
+  }
+  if(candidates.length===0){
+    box.innerHTML='<div class="box" style="color:#d32f2f;text-align:center">조건을 만족하는 조합이 없습니다. 설정을 완화해 보세요.</div>';
+    return;
+  }
+  let picked;
+  if(useAnti){
+    picked=candidates.map(c=>({c,s:sharedRisk(c)})).sort((a,b)=>a.s-b.s).slice(0,5);
+  } else {
+    picked=candidates.slice(0,5).map(c=>({c,s:sharedRisk(c)}));
+  }
+  picked.forEach((p,i)=>box.appendChild(makeCard(p.c,p.s,'ABCDE'[i])));
+  if(picked.length<5){
+    const n=document.createElement('div');
+    n.className='small'; n.style.textAlign='center';
+    n.textContent=`조건이 엄격해 ${picked.length}게임만 생성되었습니다.`;
+    box.appendChild(n);
+  }
 }
 
-// 🟢 직전 회차 당첨 번호 OMR 보기 토글 함수
-function toggleWinningOmrView() {
-    const container = document.getElementById('winningOmrContainer');
-    if (container.style.display === 'block') {
-        container.style.display = 'none';
-    } else {
-        if (allHistoryData.length > 0) {
-            const latestRoundData = allHistoryData[0]; // 최신 회차
-            document.getElementById('winningOmrTitle').innerText = `제${latestRoundData.round}회차 당첨 번호 [${latestRoundData.nums.join(', ')}] (보너스: ${latestRoundData.bonus})`;
-            // 보너스 번호까지 포함해서 마킹하거나 메인 번호만 마킹 (여기서는 메인 번호 6개 기준)
-            document.getElementById('winningOmrContent').innerHTML = renderOmrGridHtml(latestRoundData.nums);
-        } else {
-            document.getElementById('winningOmrContent').innerText = '불러온 당첨 데이터가 없습니다.';
-        }
-        container.style.display = 'block';
-    }
+function ballClass(n){return n<=10?'b1':n<=20?'b2':n<=30?'b3':n<=40?'b4':'b5';}
+function omrHtml(nums){
+  const set=new Set(nums); let h='';
+  for(let i=1;i<=49;i++) h += i<=45 ? `<div class="cell ${set.has(i)?'m':''}">${i}</div>` : '<div class="cell e"></div>';
+  return `<div class="omr"><div class="grid">${h}</div></div>`;
+}
+function makeCard(c,score,label){
+  const sum=c.reduce((a,b)=>a+b,0), odd=c.filter(n=>n%2).length, low=c.filter(n=>n<=22).length;
+  const el=document.createElement('div'); el.className='card';
+  el.innerHTML=`
+  <div class="head"><span>게임 ${label}</span>
+  <span style="font-weight:normal">공동당첨 위험점수: <b>${score}</b> (낮을수록 유리) | 총합 ${sum}</span></div>
+  <div class="body"><div>
+  <div class="balls">${c.map(n=>`<div class="ball ${ballClass(n)}">${n}</div>`).join('')}</div>
+  <div class="small">홀짝 ${odd}:${6-odd} | 저고 ${low}:${6-low}</div></div>
+  ${omrHtml(c)}</div>`;
+  return el;
 }
 
-async function addNewRoundManual() {
-    const r = parseInt(document.getElementById('inR').value);
-    const n1 = parseInt(document.getElementById('in1').value);
-    const n2 = parseInt(document.getElementById('in2').value);
-    const n3 = parseInt(document.getElementById('in3').value);
-    const n4 = parseInt(document.getElementById('in4').value);
-    const n5 = parseInt(document.getElementById('in5').value);
-    const n6 = parseInt(document.getElementById('in6').value);
-    const b = parseInt(document.getElementById('inB').value);
-
-    if (!r || !n1 || !n2 || !n3 || !n4 || !n5 || !n6) {
-        alert("회차와 6개 번호를 모두 입력해주세요.");
-        return;
-    }
-
-    let nums = [n1, n2, n3, n4, n5, n6].sort((a, b) => a - b);
-    const newRound = { round: r, nums: nums, bonus: b || 0, date: '' };
-
-    try {
-        const response = await fetch('/api/lotto', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newRound)
-        });
-
-        if (response.ok) {
-            allHistoryData.unshift(newRound);
-            allHistoryData.sort((a, b) => b.round - a.round);
-            recalculateStats();
-            alert(`${r}회차가 서버 DB에 영구 저장되었습니다.`);
-        } else {
-            alert("서버 저장 실패");
-        }
-    } catch (err) {
-        console.error("통신 에러:", err);
-        alert("서버 통신 중 오류가 발생했습니다.");
-    }
+// ===== 데이터 (서버 연동) =====
+function refreshStats(){
+  if(!history.length) return;
+  history.sort((a,b)=>b.round-a.round);
+  document.getElementById('loaded').innerText =
+    `${history[history.length-1].round}회 ~ ${history[0].round}회 (총 ${history.length.toLocaleString()}개)`;
+  const cnt={}; history.forEach(r=>r.nums.forEach(n=>cnt[n]=(cnt[n]||0)+1));
+  const top=Object.keys(cnt).map(Number).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3).map(n=>`${n}(${cnt[n]}회)`).join(', ');
+  document.getElementById('stats').innerText=`최다 출현(참고용): ${top}`;
 }
-
-function uploadExcel(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-        let loaded = [];
-        for (let row of json) {
-            if (!row || row.length < 8) continue;
-            let round = null;
-            let nums = [];
-            let bonus = 0;
-
-            for (let val of row) {
-                let num = parseInt(val, 10);
-                if (!isNaN(num) && num > 0) {
-                    if (round === null && num >= 1) round = num;
-                    else if (nums.length < 6 && num >= 1 && num <= 45) nums.push(num);
-                    else if (nums.length === 6 && bonus === 0 && num >= 1 && num <= 45) bonus = num;
-                }
-            }
-            if (round && nums.length === 6) {
-                nums.sort((a, b) => a - b);
-                loaded.push({ round: round, nums: nums, bonus: bonus, date: '' });
-            }
-        }
-
-        if (loaded.length > 0) {
-            let map = new Map();
-            for (let item of loaded) map.set(item.round, item);
-            allHistoryData = Array.from(map.values()).sort((a, b) => b.round - a.round);
-
-            alert(`총 ${allHistoryData.length}개 회차 데이터를 서버 DB에 저장하고 있습니다. 완료될 때까지 창을 닫지 마세요!`);
-            
-            try {
-                const response = await fetch('/api/lotto/batch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(allHistoryData)
-                });
-
-                if (response.ok) {
-                    recalculateStats();
-                    alert("엑셀 데이터가 서버 DB에 영구 저장되었으며, 미래 모멘텀 분석이 갱신되었습니다!");
-                } else {
-                    alert("서버 일괄 저장 중 오류가 발생했습니다.");
-                }
-            } catch (err) {
-                console.error("서버 일괄 저장 통신 실패:", err);
-                alert("서버 통신 중 에러가 발생했습니다.");
-            }
-        } else {
-            alert("엑셀 데이터 형식을 읽을 수 없습니다.");
-        }
-    };
-    reader.readAsArrayBuffer(file);
+async function addRound(){
+  const g=id=>parseInt(document.getElementById(id).value);
+  const r=g('inR'), nums=[g('in1'),g('in2'),g('in3'),g('in4'),g('in5'),g('in6')];
+  const b=g('inB')||0;
+  if(!r||nums.some(n=>!(n>=1&&n<=45))||new Set(nums).size!==6){ alert('회차와 서로 다른 6개 번호(1~45)를 입력해주세요.'); return; }
+  nums.sort((a,b)=>a-b);
+  const item={round:r,nums,bonus:b,date:''};
+  try{
+    const res=await fetch('/api/lotto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
+    if(!res.ok){ alert('서버 저장 실패'); return; }
+    history=history.filter(x=>x.round!==r); history.push(item); refreshStats();
+    alert(`${r}회차가 저장되었습니다.`);
+  }catch(e){ alert('서버 통신 오류'); }
 }
-
-function resetStoredData() {
-    if (!confirm("서버에 저장된 데이터를 초기화하시겠습니까?")) return;
-    alert("초기화 요청이 완료되었습니다.");
+function uploadExcel(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+    const map=new Map();
+    for(const row of rows){
+      if(!row||row.length<8) continue;
+      let round=null, nums=[], bonus=0;
+      for(const v of row){
+        const n=parseInt(v,10); if(isNaN(n)||n<=0) continue;
+        if(round===null) round=n;
+        else if(nums.length<6 && n<=45) nums.push(n);
+        else if(nums.length===6 && !bonus && n<=45) bonus=n;
+      }
+      if(round && nums.length===6 && new Set(nums).size===6)
+        map.set(round,{round,nums:nums.sort((a,b)=>a-b),bonus,date:''});
+    }
+    if(!map.size){ alert('엑셀 형식을 읽을 수 없습니다.'); return; }
+    history=[...map.values()];
+    try{
+      const res=await fetch('/api/lotto/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(history)});
+      alert(res.ok?'저장 완료!':'서버 저장 오류');
+    }catch(err){ alert('서버 통신 오류 (화면에서는 데이터가 반영됩니다)'); }
+    refreshStats();
+  };
+  reader.readAsArrayBuffer(file);
 }
-
-function getBallClass(num) {
-    if (num <= 10) return 'ball-1';
-    if (num <= 20) return 'ball-2';
-    if (num <= 30) return 'ball-3';
-    if (num <= 40) return 'ball-4';
-    return 'ball-5';
+async function resetData(){
+  if(!confirm('서버에 저장된 데이터를 모두 삭제할까요?')) return;
+  try{
+    const res=await fetch('/api/lotto',{method:'DELETE'});
+    if(res.ok){ history=[]; document.getElementById('loaded').innerText='0회'; document.getElementById('stats').innerText=''; alert('초기화 완료'); }
+    else alert('서버가 DELETE /api/lotto 를 지원하지 않습니다. 서버 코드를 추가해야 합니다.');
+  }catch(e){ alert('서버 통신 오류'); }
 }
-
-function calculateAC(nums) {
-    let diffs = new Set();
-    for (let i = 0; i < nums.length; i++) {
-        for (let j = i + 1; j < nums.length; j++) diffs.add(Math.abs(nums[i] - nums[j]));
-    }
-    return diffs.size - (nums.length - 1);
-}
-
-function checkOmrGridBalance(numbers) {
-    let rowCounts = [0, 0, 0, 0, 0, 0, 0];
-    let colCounts = [0, 0, 0, 0, 0, 0, 0];
-
-    for (let n of numbers) {
-        let r = Math.floor((n - 1) / 7);
-        let c = (n - 1) % 7;
-        rowCounts[r]++;
-        colCounts[c]++;
-    }
-
-    if (Math.max(...rowCounts) > 2) return false;
-    if (Math.max(...colCounts) > 2) return false;
-    if (colCounts.filter(cnt => cnt > 0).length < 4) return false;
-
-    return true;
-}
-
-function isValidCombination(numbers, reqEvenStart, reqEvenEnd, reqClose40, pool) {
-    if (userExcludeNums.some(ex => numbers.includes(ex))) return false;
-    if (reqEvenStart && numbers[0] % 2 !== 0) return false;
-    if (reqEvenEnd && numbers[5] % 2 !== 0) return false;
-
-    const sum = numbers.reduce((a, b) => a + b, 0);
-    if (sum < 110 || sum > 160) return false;
-
-    const oddCount = numbers.filter(n => n % 2 !== 0).length;
-    if (oddCount !== 2 && oddCount !== 3 && oddCount !== 4) return false;
-
-    const lowCount = numbers.filter(n => n <= 22).length;
-    if (lowCount !== 3 && lowCount !== 4) return false;
-
-    const ends = numbers.map(n => n % 10);
-    if (new Set(ends).size === ends.length) return false;
-
-    if (reqClose40 && pool.some(n => n >= 40) && numbers[5] < 40) return false;
-
-    if (document.getElementById('chkCarryOverLimit').checked) {
-        let carryCount = numbers.filter(n => latestMainNums.includes(n)).length;
-        if (carryCount > 2) return false;
-    }
-
-    if (document.getElementById('chkConsecutiveBlock').checked) {
-        let cur = 1, maxC = 1;
-        for (let i = 0; i < numbers.length - 1; i++) {
-            if (numbers[i + 1] === numbers[i] + 1) { cur++; maxC = Math.max(maxC, cur); }
-            else cur = 1;
-        }
-        if (maxC >= 3) return false;
-    }
-
-    if (document.getElementById('chkOmrGridBalance').checked) {
-        if (!checkOmrGridBalance(numbers)) return false;
-    }
-
-    if (document.getElementById('chkSectionBalance').checked) {
-        let secCounts = [0, 0, 0, 0, 0];
-        for (let n of numbers) {
-            let sIdx = n <= 9 ? 0 : n <= 19 ? 1 : n <= 29 ? 2 : n <= 39 ? 3 : 4;
-            secCounts[sIdx]++;
-        }
-        if (Math.max(...secCounts) > 3) return false;
-        if (secCounts.filter(c => c > 0).length < 3) return false;
-    }
-
-    if (document.getElementById('chkAcValue').checked) {
-        if (calculateAC(numbers) < 7) return false;
-    }
-
-    return true;
-}
-
-function generateSingleCombo(mode) {
-    let attempts = 0;
-    const isCustom = (mode === 'custom');
-    let pool = isCustom ? userCustomPool : weightedPool;
-    
-    pool = pool.filter(n => !userExcludeNums.includes(n));
-    if (pool.length < 6) return null;
-
-    const reqEvenStart = document.getElementById('chkEvenStart').checked;
-    const reqEvenEnd = document.getElementById('chkEvenEnd').checked;
-    const reqClose40 = document.getElementById('chkClose40').checked;
-    const applyPairWeight = document.getElementById('chkApplyPairWeight').checked;
-
-    while (attempts < 35000) {
-        attempts++;
-        let selected = [];
-
-        if (applyPairWeight && topPairs.length > 0 && Math.random() < 0.5) {
-            let validPairs = topPairs.filter(p => pool.includes(p.n1) && pool.includes(p.n2));
-            if (validPairs.length > 0) {
-                let randomTopPair = validPairs[Math.floor(Math.random() * Math.min(validPairs.length, 10))];
-                selected.push(randomTopPair.n1, randomTopPair.n2);
-            }
-        }
-
-        if (!isCustom) {
-            let highProbPool = pool.slice(0, 25).filter(n => !selected.includes(n)).sort(() => 0.5 - Math.random());
-            while (selected.length < 3 && highProbPool.length > 0) selected.push(highProbPool.pop());
-
-            let poolCopy = pool.filter(n => !selected.includes(n)).sort(() => 0.5 - Math.random());
-            while (selected.length < 6 && poolCopy.length > 0) selected.push(poolCopy.pop());
-        } else {
-            let poolCopy = pool.filter(n => !selected.includes(n)).sort(() => 0.5 - Math.random());
-            while (selected.length < 6 && poolCopy.length > 0) selected.push(poolCopy.pop());
-        }
-
-        selected.sort((a, b) => a - b);
-        if (selected.length === 6 && isValidCombination(selected, reqEvenStart, reqEvenEnd, reqClose40, pool)) {
-            return selected;
-        }
-    }
-    return null;
-}
-
-function renderOmrGridHtml(numbers) {
-    let cellsHtml = '';
-    const numSet = new Set(numbers);
-
-    for (let i = 1; i <= 49; i++) {
-        if (i <= 45) {
-            let isMarked = numSet.has(i);
-            cellsHtml += `<div class="omr-cell ${isMarked ? 'marked' : ''}">${i}</div>`;
-        } else {
-            cellsHtml += `<div class="omr-cell empty"></div>`;
-        }
-    }
-
-    return `
-        <div class="omr-preview-box">
-            <span class="omr-title">OMR 마킹 분포</span>
-            <div class="omr-grid">
-                ${cellsHtml}
-            </div>
-        </div>
-    `;
-}
-
-function generateCombinations() {
-    const mode = document.querySelector('input[name="poolMode"]:checked').value;
-    const container = document.getElementById('results');
-    container.innerHTML = '';
-
-    if (mode === 'custom' && userCustomPool.length < 6) {
-        alert("맞춤 번호 모드를 사용하려면 중복을 제외하고 최소 6개 이상의 번호를 입력해주세요.");
-        return;
-    }
-
-    const labels = ['A', 'B', 'C', 'D', 'E'];
-    let combos = [];
-    let attempts = 0;
-
-    while (combos.length < 5 && attempts < 90) {
-        attempts++;
-        let c = generateSingleCombo(mode);
-        if (c) {
-            let key = c.join(',');
-            if (!combos.some(existing => existing.join(',') === key)) {
-                combos.push(c);
-            }
-        }
-    }
-
-    if (combos.length === 0) {
-        container.innerHTML = `<div class="section-box" style="color:#d32f2f; text-align:center;">
-            조건을 만족하는 조합을 찾지 못했습니다. 설정을 조정해 보세요.
-        </div>`;
-        return;
-    }
-
-    for (let i = 0; i < combos.length; i++) {
-        const combo = combos[i];
-        const sum = combo.reduce((a, b) => a + b, 0);
-        const odd = combo.filter(n => n % 2 !== 0).length;
-        const even = 6 - odd;
-        const low = combo.filter(n => n <= 22).length;
-        const high = 6 - low;
-        const ac = calculateAC(combo);
-
-        let ballsHtml = combo.map(n => `<div class="ball ${getBallClass(n)}">${n}</div>`).join('');
-        let omrHtml = renderOmrGridHtml(combo);
-
-        const card = document.createElement('div');
-        card.className = 'combo-card';
-        card.innerHTML = `
-            <div class="combo-header">
-                <span style="font-size:0.9rem;">미래 최적화 게임 ${labels[i]}</span>
-                <div class="backtest-container">
-                    <span class="backtest-badge" style="background:#e8f5e9; color:#2e7d32;">✨ 미래 모멘텀 필터 통과</span>
-                    <span style="margin-left:4px; font-weight:normal;">총합: ${sum} | AC: ${ac}</span>
-                </div>
-            </div>
-            <div class="combo-body">
-                <div class="combo-left">
-                    <div class="balls">${ballsHtml}</div>
-                    <div class="stats-text">홀짝 ${odd}:${even} | 저고 ${low}:${high} | 마감 번호 <b>${combo[5]}</b></div>
-                </div>
-                ${omrHtml}
-            </div>
-        `;
-        container.appendChild(card);
-    }
-}
-
-async function initApp() {
-    try {
-        const response = await fetch('/api/lotto');
-        const serverData = await response.json();
-        if (serverData && serverData.length > 0) {
-            allHistoryData = serverData;
-            document.getElementById('dbStatus').innerText = '(Postgres DB 영구 연동됨)';
-            document.getElementById('dbStatus').style.color = '#2e7d32';
-        }
-    } catch (err) {
-        console.warn("서버 데이터 로드 실패", err);
-    }
-    recalculateStats();
-}
-
-initApp();
+(async function init(){
+  const st=document.getElementById('dbStatus');
+  try{
+    const res=await fetch('/api/lotto'); const data=await res.json();
+    if(data&&data.length){ history=data; st.innerText='(서버 DB 연동됨)'; st.style.color='#2e7d32'; }
+  }catch(e){ st.innerText='(서버 연결 실패 - 로컬 모드)'; st.style.color='#c62828'; }
+  refreshStats();
+})();
 </script>
-
 </body>
 </html>
